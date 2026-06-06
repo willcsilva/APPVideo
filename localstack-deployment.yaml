@@ -1,0 +1,37 @@
+# Caminho: k8s/infra/localstack-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: localstack
+  namespace: infra
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: localstack
+  template:
+    metadata:
+      labels:
+        app: localstack
+    spec:
+      containers:
+        - name: localstack
+          image: localstack/localstack:3.4.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4566
+          env:
+            - name: DISABLE_PRO
+              value: "1"
+            - name: SERVICES
+              value: "s3,sqs,ses"
+            - name: DEBUG
+              value: "1"
+            - name: PROVIDER_OVERRIDE_S3 # Garante que o S3 use o motor novo sem caçar o docker
+              value: "asf"
+            - name: AWS_DEFAULT_REGION # <--- Adicione esta
+              value: "us-east-1"
+            - name: AWS_ACCESS_KEY_ID # <--- Adicione esta
+              value: "test"
+            - name: AWS_SECRET_ACCESS_KEY # <--- Adicione esta
+              value: "test"

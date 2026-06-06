@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: infra-config
+  namespace: backend
+data:
+  # LocalStack
+  AWS_ENDPOINT: http://localstack.infra.svc.cluster.local:4566
+  AWS_REGION: us-east-1
+
+  # S3 Buckets
+  S3_RAW_BUCKET: raw-videos
+  S3_PROCESSED_BUCKET: processed-images
+  S3_ZIP_BUCKET: zip-files
+
+  # SQS Queues
+  SQS_VIDEO_QUEUE: video-processing
+  SQS_ZIP_QUEUE: zip-generation
+  SQS_NOTIFICATION_QUEUE: notification
+
+  # Database
+  DB_HOST: postgres.infra.svc.cluster.local
+  DB_PORT: "5432"
+  DB_NAME: video_processor
+
+  # Redis
+  REDIS_HOST: redis.infra.svc.cluster.local
+  REDIS_PORT: "6379"
