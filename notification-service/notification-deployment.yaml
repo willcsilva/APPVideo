@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: willcsilva/notification-service:latest
+
+          env:
+            # AWS / LocalStack
+            - name: AWS_REGION
+              value: us-east-1
+            - name: AWS_ENDPOINT
+              value: http://localstack.infra.svc.cluster.local:4566
+            - name: AWS_ACCESS_KEY_ID
+              value: test
+            - name: AWS_SECRET_ACCESS_KEY
+              value: test
+
+            # SQS
+            - name: SQS_NOTIFICATION_QUEUE
+              value: notification
+            - name: SQS_NOTIFICATION_QUEUE_URL
+              value: http://localstack.infra.svc.cluster.local:4566/000000000000/notification

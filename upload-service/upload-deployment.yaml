@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upload-service
+  namespace: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: upload-service
+  template:
+    metadata:
+      labels:
+        app: upload-service
+    spec:
+      containers:
+        - name: upload-service
+          image: willcsilva/upload-service:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: AWS_REGION
+              value: us-east-1
+            - name: AWS_ENDPOINT
+              value: http://localstack.infra.svc.cluster.local:4566
+            - name: AWS_ACCESS_KEY_ID
+              value: test
+            - name: AWS_SECRET_ACCESS_KEY
+              value: test
+
+            - name: DB_HOST
+              value: postgres.infra.svc.cluster.local
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: video_processor
+            - name: DB_USER
+              value: admin
+            - name: DB_PASSWORD
+              value: admin123
+
+            - name: S3_RAW_BUCKET
+              value: raw-videos
+
+            - name: SQS_VIDEO_QUEUE
+              value: video-processing
+            - name: SQS_VIDEO_QUEUE_URL
+              value: http://localstack.infra.svc.cluster.local:4566/000000000000/video-processing
+
+            - name: JWT_SECRET
+              value: minha-chave-jwt-dev
+
