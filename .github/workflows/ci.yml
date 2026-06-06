@@ -1,8 +1,8 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
 
 jobs:
@@ -106,3 +106,31 @@ jobs:
           push: true
           tags: willcsilva/notification-service:latest
           platforms: linux/amd64
+
+  deploy:
+    needs: docker-build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configurar kubeconfig (on-premise)
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_ON_PREMISE }}" > $HOME/.kube/config
+
+      - name: Deploy no Kubernetes
+        run: |
+          kubectl apply -f k8s/
+
+      - name: Restart deployments
+        run: |
+          kubectl rollout restart deployment auth-service -n backend
+          kubectl rollout restart deployment upload-service -n backend
+          kubectl rollout restart deployment video-worker -n backend
+          kubectl rollout restart deployment zip-service -n backend
+          kubectl rollout restart deployment notification-service -n backend
