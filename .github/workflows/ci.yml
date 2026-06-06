@@ -1,0 +1,108 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # -------------------------
+      # AUTH SERVICE
+      # -------------------------
+      - name: Install deps (auth-service)
+        run: |
+          cd auth-service
+          npm install
+
+      - name: Run tests (auth-service)
+        run: |
+          cd auth-service
+          npm test
+
+      # -------------------------
+      # UPLOAD SERVICE
+      # -------------------------
+      - name: Install deps (upload-service)
+        run: |
+          cd upload-service
+          npm install
+
+      - name: Run tests (upload-service)
+        run: |
+          cd upload-service
+          npm test
+
+  docker-build-and-push:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Login Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # -------------------------
+      # BUILD AUTH
+      # -------------------------
+      - name: Build e Push auth-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./auth-service
+          push: true
+          tags: willcsilva/auth-service:latest
+          platforms: linux/amd64
+
+      # -------------------------
+      # BUILD UPLOAD
+      # -------------------------
+      - name: Build e Push upload-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./upload-service
+          push: true
+          tags: willcsilva/upload-service:latest
+          platforms: linux/amd64
+
+      # -------------------------
+      # BUILD WORKERS
+      # -------------------------
+      - name: Build e Push video-worker
+        uses: docker/build-push-action@v6
+        with:
+          context: ./video-processor-worker
+          push: true
+          tags: willcsilva/video-worker:latest
+          platforms: linux/amd64
+
+      - name: Build e Push zip-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./zip-service
+          push: true
+          tags: willcsilva/zip-service:latest
+          platforms: linux/amd64
+
+      - name: Build e Push notification-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./notification-service
+          push: true
+          tags: willcsilva/notification-service:latest
+          platforms: linux/amd64
