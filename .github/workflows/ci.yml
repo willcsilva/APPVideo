@@ -25,6 +25,7 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   build-and-test:
+    needs: sonar
     runs-on: ubuntu-latest
 
     services:
