@@ -27,11 +27,11 @@ spec:
               value: "s3,sqs,ses"
             - name: DEBUG
               value: "1"
-            - name: PROVIDER_OVERRIDE_S3 # Garante que o S3 use o motor novo sem caçar o docker
+            - name: PROVIDER_OVERRIDE_S3 
               value: "asf"
-            - name: AWS_DEFAULT_REGION # <--- Adicione esta
+            - name: AWS_DEFAULT_REGION 
               value: "us-east-1"
-            - name: AWS_ACCESS_KEY_ID # <--- Adicione esta
+            - name: AWS_ACCESS_KEY_ID 
               value: "test"
-            - name: AWS_SECRET_ACCESS_KEY # <--- Adicione esta
+            - name: AWS_SECRET_ACCESS_KEY 
               value: "test"
