@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: status-service
+  namespace: backend
+spec:
+  selector:
+    app: status-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3005
+  type: ClusterIP
