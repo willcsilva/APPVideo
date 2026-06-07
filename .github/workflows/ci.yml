@@ -40,6 +40,12 @@ jobs:
         run: |
           cd auth-service
           npm install
+    
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
 
       - name: Aguardar Postgres de teste
         run: |
