@@ -1,0 +1,14 @@
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: keda-aws-creds
+  namespace: backend
+spec:
+  secretTargetRef:
+    - parameter: awsAccessKeyID
+      name: app-secrets
+      key: AWS_ACCESS_KEY_ID
+
+    - parameter: awsSecretAccessKey
+      name: app-secrets
+      key: AWS_SECRET_ACCESS_KEY
