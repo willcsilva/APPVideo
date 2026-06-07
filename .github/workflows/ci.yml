@@ -192,8 +192,8 @@ jobs:
             context: ./status-service
             push: true
             tags: |
-                willcsilva/status-service:latest
-                willcsilva/status-service:${{ steps.vars.outputs.TAG }}
+              willcsilva/status-service:latest
+              willcsilva/status-service:${{ steps.vars.outputs.TAG }}
             platforms: linux/amd64
 
   deploy-on-premise:
