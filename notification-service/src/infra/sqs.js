@@ -2,10 +2,9 @@ import { config } from "../config.js";
 
 const isLocal = config.awsEndpoint;
 
-export const s3 = new S3Client({
+export const sqs = new SQSClient({
   region: config.awsRegion,
-  ...(isLocal && {
+  ...(config.awsEndpoint && {
     endpoint: config.awsEndpoint,
-    forcePathStyle: true,
   }),
 });
