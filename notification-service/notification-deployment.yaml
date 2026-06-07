@@ -37,3 +37,9 @@ spec:
 
             - name: SQS_NOTIFICATION_QUEUE_URL
               value: http://localstack.infra.svc.cluster.local:4566/000000000000/notification
+
+            - name: RETRY_MAX_RECEIVE_COUNT
+              value: "5"
+
+            - name: RETRY_BACKOFF_BASE_SECONDS
+              value: "10"
