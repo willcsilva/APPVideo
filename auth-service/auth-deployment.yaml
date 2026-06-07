@@ -20,35 +20,45 @@ spec:
             - containerPort: 3001
 
           env:
-            # ✅ AMBIENTE
             - name: NODE_ENV
               value: "stage"
 
-            # ✅ APP
             - name: PORT
               value: "3001"
 
-            # ✅ DATABASE
             - name: DB_HOST
               value: postgres.infra.svc.cluster.local
+
             - name: DB_PORT
               value: "5432"
+
             - name: DB_NAME
               value: video_processor
+
             - name: DB_USER
-              value: admin
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_USER
+
             - name: DB_PASSWORD
-              value: admin123
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
 
-            # ✅ JWT
             - name: JWT_SECRET
-              value: minha-chave-jwt-dev
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: JWT_SECRET
 
-            # ✅ NEW RELIC
             - name: NEW_RELIC_LICENSE_KEY
-              value: "${NEW_RELIC_LICENSE_KEY}"
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: NEW_RELIC_LICENSE_KEY
 
-            # ✅ AWS (LOCALSTACK)
             - name: AWS_REGION
               value: us-east-1
 

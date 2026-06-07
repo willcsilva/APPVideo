@@ -28,9 +28,16 @@ spec:
               value: http://localstack.infra.svc.cluster.local:4566
 
             - name: AWS_ACCESS_KEY_ID
-              value: test
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: AWS_ACCESS_KEY_ID
+
             - name: AWS_SECRET_ACCESS_KEY
-              value: test
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: AWS_SECRET_ACCESS_KEY
 
             - name: S3_PROCESSED_BUCKET
               value: processed-images
@@ -52,14 +59,24 @@ spec:
 
             - name: DB_HOST
               value: postgres.infra.svc.cluster.local
+
             - name: DB_PORT
               value: "5432"
+
             - name: DB_NAME
               value: video_processor
+
             - name: DB_USER
-              value: admin
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_USER
+
             - name: DB_PASSWORD
-              value: admin123
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
 
             - name: LOCAL_FRAMES_DIR
               value: /tmp/zip-input
