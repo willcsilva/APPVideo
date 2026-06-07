@@ -12,7 +12,6 @@ spec:
       http:
         paths:
 
-          # ✅ AUTH (precisa rewrite)
           - path: /auth(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
@@ -20,10 +19,7 @@ spec:
                 name: auth-service
                 port:
                   number: 3001
-            # annotation local via ingress-nginx snippet
-            # (vamos usar configuração alternativa abaixo)
 
-          # ✅ VIDEOS (NÃO usa rewrite)
           - path: /videos
             pathType: Prefix
             backend:

@@ -6,7 +6,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: "" # <--- Força o PVC a procurar um PV estático criado manualmente
+  storageClassName: ""
   resources:
     requests:
       storage: 5Gi
