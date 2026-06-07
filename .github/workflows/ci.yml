@@ -17,8 +17,12 @@ jobs:
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=willcsilva_APPVideo
+            -Dsonar.organization=willcsilva
+    env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   build-and-test:
     runs-on: ubuntu-latest
