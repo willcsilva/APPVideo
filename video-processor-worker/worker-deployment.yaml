@@ -3,6 +3,13 @@ kind: Deployment
 metadata:
   name: video-worker
   namespace: backend
+resources:
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+  limits:
+    cpu: "1500m"
+    memory: "1Gi"
 spec:
   replicas: 1
   selector:
