@@ -194,7 +194,7 @@ jobs:
             tags: |
                 willcsilva/status-service:latest
                 willcsilva/status-service:${{ steps.vars.outputs.TAG }}
-                platforms: linux/amd64
+            platforms: linux/amd64
 
   deploy-on-premise:
     needs: docker-build-and-push
