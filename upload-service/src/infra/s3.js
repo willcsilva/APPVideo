@@ -1,10 +1,10 @@
+import { S3Client } from "@aws-sdk/client-s3";
 import { config } from "../config.js";
-
-const isLocal = config.awsEndpoint;
 
 export const s3 = new S3Client({
   region: config.awsRegion,
-  ...(isLocal && {
+
+  ...(config.awsEndpoint && {
     endpoint: config.awsEndpoint,
     forcePathStyle: true,
   }),

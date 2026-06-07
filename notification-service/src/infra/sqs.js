@@ -1,9 +1,10 @@
-import { config } from "../config.js";
+import { SQSClient } from "@aws-sdk/client-sqs";
 
-const isLocal = config.awsEndpoint;
+import { config } from "../config.js";
 
 export const sqs = new SQSClient({
   region: config.awsRegion,
+
   ...(config.awsEndpoint && {
     endpoint: config.awsEndpoint,
   }),
