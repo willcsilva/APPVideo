@@ -115,7 +115,7 @@ GET /status
 
 Exemplo de resposta:
 
-```json
+
 {
   "status": "ok",
   "services": {
@@ -126,12 +126,12 @@ Exemplo de resposta:
 
 ---
 
-🐳 Execução Local
+## 🐳 Execuçao Local
 
 docker build -t status-service .
 docker run -p 3005:3005 status-service
 
-☁️ Deploy
+## ☁️ Deploy
 
 kubectl apply -f k8s/
 
