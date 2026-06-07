@@ -18,29 +18,32 @@ spec:
           image: willcsilva/video-worker:latest
 
           env:
-            # AWS / LocalStack
+            - name: NODE_ENV
+              value: "stage"
+
             - name: AWS_REGION
               value: us-east-1
+
             - name: AWS_ENDPOINT
               value: http://localstack.infra.svc.cluster.local:4566
+
             - name: AWS_ACCESS_KEY_ID
               value: test
             - name: AWS_SECRET_ACCESS_KEY
               value: test
 
-            # SQS
             - name: SQS_VIDEO_QUEUE
               value: video-processing
+
             - name: SQS_VIDEO_QUEUE_URL
               value: http://localstack.infra.svc.cluster.local:4566/000000000000/video-processing
 
-            # S3
             - name: S3_RAW_BUCKET
               value: raw-videos
+
             - name: S3_PROCESSED_BUCKET
               value: processed-images
 
-            # DB ✅ (O QUE FALTAVA)
             - name: DB_HOST
               value: postgres.infra.svc.cluster.local
             - name: DB_PORT
@@ -52,8 +55,8 @@ spec:
             - name: DB_PASSWORD
               value: admin123
 
-            # Diretórios locais
             - name: LOCAL_VIDEO_DIR
               value: /tmp/videos
+
             - name: LOCAL_FRAMES_DIR
               value: /tmp/frames

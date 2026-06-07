@@ -18,9 +18,17 @@ spec:
           image: willcsilva/auth-service:latest
           ports:
             - containerPort: 3001
+
           env:
+            # ✅ AMBIENTE
+            - name: NODE_ENV
+              value: "stage"
+
+            # ✅ APP
             - name: PORT
               value: "3001"
+
+            # ✅ DATABASE
             - name: DB_HOST
               value: postgres.infra.svc.cluster.local
             - name: DB_PORT
@@ -31,7 +39,18 @@ spec:
               value: admin
             - name: DB_PASSWORD
               value: admin123
+
+            # ✅ JWT
             - name: JWT_SECRET
               value: minha-chave-jwt-dev
+
+            # ✅ NEW RELIC
             - name: NEW_RELIC_LICENSE_KEY
-              value: 26702b493851a62645a7e2b694973a012939NRAL
+              value: "${NEW_RELIC_LICENSE_KEY}"
+
+            # ✅ AWS (LOCALSTACK)
+            - name: AWS_REGION
+              value: us-east-1
+
+            - name: AWS_ENDPOINT
+              value: http://localstack.infra.svc.cluster.local:4566

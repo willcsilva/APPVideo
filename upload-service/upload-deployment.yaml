@@ -18,11 +18,20 @@ spec:
           image: willcsilva/upload-service:latest
           ports:
             - containerPort: 3000
+
           env:
+            - name: NODE_ENV
+              value: "stage"
+
+            - name: PORT
+              value: "3000"
+
             - name: AWS_REGION
               value: us-east-1
+
             - name: AWS_ENDPOINT
               value: http://localstack.infra.svc.cluster.local:4566
+
             - name: AWS_ACCESS_KEY_ID
               value: test
             - name: AWS_SECRET_ACCESS_KEY
@@ -44,9 +53,9 @@ spec:
 
             - name: SQS_VIDEO_QUEUE
               value: video-processing
+
             - name: SQS_VIDEO_QUEUE_URL
               value: http://localstack.infra.svc.cluster.local:4566/000000000000/video-processing
 
             - name: JWT_SECRET
               value: minha-chave-jwt-dev
-

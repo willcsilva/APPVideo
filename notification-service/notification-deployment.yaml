@@ -18,18 +18,22 @@ spec:
           image: willcsilva/notification-service:latest
 
           env:
-            # AWS / LocalStack
+            - name: NODE_ENV
+              value: "stage"
+
             - name: AWS_REGION
               value: us-east-1
+
             - name: AWS_ENDPOINT
               value: http://localstack.infra.svc.cluster.local:4566
+
             - name: AWS_ACCESS_KEY_ID
               value: test
             - name: AWS_SECRET_ACCESS_KEY
               value: test
 
-            # SQS
             - name: SQS_NOTIFICATION_QUEUE
               value: notification
+
             - name: SQS_NOTIFICATION_QUEUE_URL
               value: http://localstack.infra.svc.cluster.local:4566/000000000000/notification
