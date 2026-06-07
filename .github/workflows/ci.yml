@@ -189,12 +189,12 @@ jobs:
       - name: Build e Push status-service
         uses: docker/build-push-action@v6
         with:
-            context: ./status-service
-            push: true
-            tags: |
-              willcsilva/status-service:latest
-              willcsilva/status-service:${{ steps.vars.outputs.TAG }}
-            platforms: linux/amd64
+          context: ./status-service
+          push: true
+          tags: |
+            willcsilva/status-service:latest
+            willcsilva/status-service:${{ steps.vars.outputs.TAG }}
+          platforms: linux/amd64
 
   deploy-on-premise:
     needs: docker-build-and-push
