@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APPVideo - Arquitetura</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header>
+    <h1>🎬 APPVideo</h1>
+    <p>Plataforma Distribuída de Processamento de Vídeos</p>
+
+    <div class="cluster-box">
+      ☸ Kubernetes Cluster
+    </div>
+  </header>
+
+  <main>
+
+    <section class="layer">
+      <h2>👤 Entrada do Sistema</h2>
+
+      <div class="flow">
+
+        <div class="service user">
+          <span>👤</span>
+          <h3>Usuário</h3>
+          <small>Cliente Web/API</small>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="layer">
+      <h2>🌐 Camada de APIs</h2>
+
+      <div class="flow">
+
+        <div class="service auth">
+          <span>🔐</span>
+          <h3>Auth Service</h3>
+          <small>Node.js + JWT</small>
+          <p class="metric">✅ Online</p>
+        </div>
+
+        <div class="service upload">
+          <span>📤</span>
+          <h3>Upload Service</h3>
+          <small>Recebe Vídeos</small>
+          <p class="metric">✅ Online</p>
+        </div>
+
+        <div class="service status">
+          <span>📊</span>
+          <h3>Status Service</h3>
+          <small>Health Check</small>
+          <p class="metric">✅ Online</p>
+        </div>
+
+      </div>
+
+    </section>
+
+    <section class="layer">
+
+      <h2>⚙️ Camada de Processamento</h2>
+
+      <div class="flow">
+
+        <div class="service queue">
+          <span>📬</span>
+          <h3>SQS Queue</h3>
+          <small>Mensageria</small>
+          <p class="metric">📦 Jobs</p>
+        </div>
+
+        <div class="service worker">
+          <span>🎬</span>
+          <h3>Video Worker</h3>
+          <small>FFmpeg</small>
+          <p class="metric">⚙️ Processando</p>
+        </div>
+
+        <div class="service zip">
+          <span>🗜️</span>
+          <h3>Zip Service</h3>
+          <small>Compactação</small>
+          <p class="metric">📁 Arquivos</p>
+        </div>
+
+      </div>
+
+    </section>
+
+    <section class="layer">
+
+      <h2>📨 Notificação</h2>
+
+      <div class="flow">
+
+        <div class="service notification">
+          <span>📧</span>
+          <h3>Notification</h3>
+          <small>E-mail / Alertas</small>
+          <p class="metric">✅ Ativo</p>
+        </div>
+
+      </div>
+
+    </section>
+
+    <section class="layer">
+
+      <h2>☁️ Infraestrutura</h2>
+
+      <div class="infra">
+
+        <div class="infra-card">
+          <h3>🗄 PostgreSQL</h3>
+          <p>Persistência de dados</p>
+        </div>
+
+        <div class="infra-card">
+          <h3>⚡ Redis</h3>
+          <p>Cache distribuído</p>
+        </div>
+
+        <div class="infra-card">
+          <h3>☁️ LocalStack</h3>
+          <p>S3 + SQS</p>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+
+</body>
+
+</html>

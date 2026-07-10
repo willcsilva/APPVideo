@@ -1,0 +1,179 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #07142d;
+  color: white;
+  font-family: "Segoe UI", sans-serif;
+}
+
+header {
+  text-align: center;
+  padding: 40px;
+}
+
+header h1 {
+  font-size: 3.5rem;
+}
+
+header p {
+  margin-top: 10px;
+  color: #94a3b8;
+}
+
+.cluster-box {
+  width: fit-content;
+
+  margin: 25px auto;
+
+  padding: 12px 30px;
+
+  border-radius: 50px;
+
+  background: rgba(56, 189, 248, 0.15);
+
+  border: 1px solid #38bdf8;
+
+  color: #38bdf8;
+
+  font-weight: bold;
+}
+
+.layer {
+  margin: 50px auto;
+  width: 95%;
+}
+
+.layer h2 {
+  text-align: center;
+
+  margin-bottom: 25px;
+
+  color: #38bdf8;
+}
+
+.flow {
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 25px;
+
+  flex-wrap: wrap;
+}
+
+.service {
+
+  width: 220px;
+  min-height: 180px;
+
+  background: #1e2d48;
+
+  border-radius: 16px;
+
+  border: 2px solid #334155;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 10px;
+
+  transition: .3s;
+
+  box-shadow: 0 0 20px rgba(255, 255, 255, .05);
+}
+
+.service:hover {
+  transform: translateY(-5px);
+}
+
+.service span {
+  font-size: 2rem;
+}
+
+.service h3 {
+  font-size: 1.3rem;
+}
+
+.service small {
+  opacity: .8;
+}
+
+.auth {
+  border-color: #22c55e;
+}
+
+.upload {
+  border-color: #f59e0b;
+}
+
+.queue {
+  border-color: #3b82f6;
+}
+
+.worker {
+  border-color: #a855f7;
+}
+
+.zip {
+  border-color: #ef4444;
+}
+
+.notification {
+  border-color: #14b8a6;
+}
+
+.status {
+  border-color: #38bdf8;
+}
+
+.metric {
+  color: #60a5fa;
+  font-weight: bold;
+}
+
+.infra {
+
+  display: grid;
+
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+
+  gap: 20px;
+}
+
+.infra-card {
+
+  background: #1e2d48;
+
+  border-radius: 16px;
+
+  border: 1px solid #334155;
+
+  padding: 25px;
+}
+
+.infra-card h3 {
+  margin-bottom: 15px;
+}
+
+@media(max-width: 768px) {
+
+  header h1 {
+    font-size: 2.5rem;
+  }
+
+  .service {
+    width: 100%;
+  }
+
+}

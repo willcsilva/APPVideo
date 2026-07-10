@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APPVideo Dashboard</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header>
+    <h1>🎬 APPVideo Dashboard</h1>
+    <p>Processamento Distribuído de Vídeos</p>
+  </header>
+
+  <div class="container">
+
+    <div class="card">
+
+      <h2>🔐 Login</h2>
+
+      <input
+        type="email"
+        id="email"
+        placeholder="Email">
+
+      <input
+        type="password"
+        id="password"
+        placeholder="Senha">
+
+      <button onclick="login()">
+        Entrar
+      </button>
+
+      <div id="login-status"></div>
+
+    </div>
+
+    <div class="card">
+
+      <h2>📤 Upload de Vídeo</h2>
+
+      <input
+        type="file"
+        id="videoFile">
+
+      <button onclick="uploadVideo()">
+        Enviar Vídeo
+      </button>
+
+      <div id="upload-result"></div>
+
+    </div>
+
+    <div class="card">
+
+      <h2>📊 Infraestrutura</h2>
+
+      <div id="infra-status">
+
+        Carregando...
+
+      </div>
+
+    </div>
+
+    <div class="card large">
+
+      <h2>🎞 Histórico de Vídeos</h2>
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Arquivo</th>
+            <th>Status</th>
+            <th>ZIP</th>
+          </tr>
+        </thead>
+
+        <tbody id="video-table">
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+
+</body>
+
+</html>

@@ -1,7 +1,7 @@
 if (process.env.NODE_ENV !== "test") {
   await import("newrelic");
 }
-
+import cors from "cors";
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -12,7 +12,55 @@ import { config } from "./config.js";
 import { authMiddleware } from "./middleware/auth.js";
 
 const app = express();
+
+const allowedOrigins = [
+  "http://localhost:8080",
+  "http://127.0.0.1:8080"
+];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error("Origin não permitida pelo CORS")
+      );
+    },
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "OPTIONS"
+    ],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization"
+    ],
+    credentials: true
+  })
+);
+
 app.use(express.json());
+
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Verifica saúde do serviço
+ *     tags:
+ *       - Health
+ *     responses:
+ *       200:
+ *         description: Serviço funcionando
+ */
 
 app.get("/health", async (_req, res) => {
   try {
@@ -26,6 +74,35 @@ app.get("/health", async (_req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /register:
+ *   post:
+ *     summary: Registrar novo usuário
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: usuario@email.com
+ *               password:
+ *                 type: string
+ *                 example: 123456
+ *     responses:
+ *       201:
+ *         description: Usuário criado com sucesso
+ *       409:
+ *         description: Usuário já existe
+ */
 app.post("/register", async (req, res) => {
   const client = await pool.connect();
 
@@ -76,6 +153,35 @@ app.post("/register", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Realiza login
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: usuario@email.com
+ *               password:
+ *                 type: string
+ *                 example: 123456
+ *     responses:
+ *       200:
+ *         description: Login realizado com sucesso
+ *       401:
+ *         description: Credenciais inválidas
+ */
 app.post("/login", async (req, res) => {
   const client = await pool.connect();
 
@@ -146,6 +252,21 @@ app.post("/login", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /me:
+ *   get:
+ *     summary: Retorna informações do usuário autenticado
+ *     tags:
+ *       - Auth
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Usuário autenticado
+ *       401:
+ *         description: Token inválido
+ */
 app.get("/me", authMiddleware, async (req, res) => {
   return res.status(200).json({
     message: "Token válido",

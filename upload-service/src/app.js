@@ -3,6 +3,7 @@ import multer from "multer";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import { v4 as uuidv4 } from "uuid";
+import cors from "cors";
 
 import { s3 } from "./infra/s3.js";
 import { sqs } from "./infra/sqs.js";
@@ -11,6 +12,42 @@ import { config } from "./config.js";
 import { authMiddleware } from "./middleware/auth.js";
 
 const app = express();
+
+const allowedOrigins = [
+  "http://localhost:8080",
+  "http://127.0.0.1:8080"
+];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error("Origin não permitida pelo CORS")
+      );
+    },
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "OPTIONS"
+    ],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization"
+    ],
+    credentials: true
+  })
+);
+
 const upload = multer();
 
 app.post("/videos", authMiddleware, upload.single("file"), async (req, res) => {
