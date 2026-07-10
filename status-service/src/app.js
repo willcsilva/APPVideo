@@ -1,10 +1,45 @@
 const express = require("express");
+const cors = require("cors");
 const { Client } = require("pg");
 
 const app = express();
 const port = 3005;
 
-// Config banco (igual seu auth-service)
+const allowedOrigins = [
+  "http://localhost:8080",
+  "http://127.0.0.1:8080"
+];
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error("Origin não permitida pelo CORS")
+      );
+    },
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "OPTIONS"
+    ],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization"
+    ],
+    credentials: true
+  })
+);
+
 const dbConfig = {
   host: process.env.DB_HOST || "localhost",
   port: process.env.DB_PORT || 5432,
@@ -13,7 +48,6 @@ const dbConfig = {
   password: process.env.DB_PASSWORD || "postgres"
 };
 
-// Função pra checar DB
 async function checkDatabase() {
   const client = new Client(dbConfig);
 
@@ -21,6 +55,7 @@ async function checkDatabase() {
     await client.connect();
     await client.query("SELECT 1");
     await client.end();
+
     return "ok";
   } catch (error) {
     return "error";
@@ -40,5 +75,7 @@ app.get("/status", async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Status Service rodando na porta ${port}`);
+  console.log(
+    `Status Service rodando na porta ${port}`
+  );
 });
