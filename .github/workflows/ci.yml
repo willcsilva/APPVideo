@@ -222,16 +222,12 @@ jobs:
           kubectl apply -f k8s/postgres-pv.yaml
           kubectl apply -f k8s/postgres-pvc.yaml
           kubectl apply -f k8s/postgres-secret.yaml
-
           kubectl apply -f k8s/postgres-deployment.yaml
           kubectl apply -f k8s/postgres-service.yaml
-
           kubectl apply -f k8s/redis-deployment.yaml
           kubectl apply -f k8s/redis-service.yaml
-
           kubectl apply -f k8s/localstack-deployment.yaml
           kubectl apply -f k8s/localstack-service.yaml
-
           kubectl apply -f k8s/infra-config.yaml
           kubectl apply -f k8s/infra-secret.yaml
 
@@ -240,40 +236,27 @@ jobs:
           kubectl apply -f auth-service/auth-deployment.yaml
           kubectl apply -f auth-service/auth-service.yaml
           kubectl apply -f auth-service/auth-hpa.yaml
-
           kubectl apply -f upload-service/upload-deployment.yaml
           kubectl apply -f upload-service/upload-service.yaml
           kubectl apply -f upload-service/upload-hpa.yaml
-
           kubectl apply -f status-service/status-service-deployment.yaml
           kubectl apply -f status-service/status-service-service.yaml
-
           kubectl apply -f video-processor-worker/worker-deployment.yaml
           kubectl apply -f video-processor-worker/video-worker-scaledobject.yaml
-
           kubectl apply -f zip-service/zip-deployment.yaml
-
           kubectl apply -f notification-service/notification-deployment.yaml
-
           kubectl apply -f dashboard/dashboard-deployment.yaml
           kubectl apply -f dashboard/dashboard-service.yaml
-
           kubectl apply -f k8s/ingress.yaml
 
       - name: Atualizar imagens com tag SHA
         run: |
           kubectl set image deployment/auth-service auth-service=willcsilva/auth-service:${{ needs.docker-build-and-push.outputs.tag }} -n backend
-
           kubectl set image deployment/upload-service upload-service=willcsilva/upload-service:${{ needs.docker-build-and-push.outputs.tag }} -n backend
-
           kubectl set image deployment/status-service status-service=willcsilva/status-service:${{ needs.docker-build-and-push.outputs.tag }} -n backend
-
           kubectl set image deployment/video-worker worker=willcsilva/video-worker:${{ needs.docker-build-and-push.outputs.tag }} -n backend
-
           kubectl set image deployment/zip-service zip-service=willcsilva/zip-service:${{ needs.docker-build-and-push.outputs.tag }} -n backend
-
           kubectl set image deployment/notification-service notification-service=willcsilva/notification-service:${{ needs.docker-build-and-push.outputs.tag }} -n backend
-
           kubectl set image deployment/dashboard-ui dashboard-ui=willcsilva/dashboard-ui:${{ needs.docker-build-and-push.outputs.tag }} -n backend
 
       - name: Aguardar rollout
