@@ -12,7 +12,7 @@ spec:
       containers:
         - name: bootstrap
 
-          image: amazon/aws-cli:2
+          image: localstack/localstack:latest
 
           env:
             - name: AWS_ACCESS_KEY_ID
