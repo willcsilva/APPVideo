@@ -1,6 +1,6 @@
-const AUTH_URL = "http://localhost:3001";
-const UPLOAD_URL = "http://localhost:3000";
-const STATUS_URL = "http://localhost:3005";
+const AUTH_URL = "/auth";
+const UPLOAD_URL = "";
+const STATUS_URL = "";
 
 let token = localStorage.getItem("jwt");
 

@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: dashboard-ui
+  namespace: backend
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: dashboard-ui
+
+  template:
+    metadata:
+      labels:
+        app: dashboard-ui
+
+    spec:
+      containers:
+        - name: dashboard-ui
+          image: willcsilva/dashboard-ui:latest
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 80

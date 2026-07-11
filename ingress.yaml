@@ -1,5 +1,6 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
+
 metadata:
   name: app-ingress
   namespace: backend
@@ -9,11 +10,12 @@ spec:
 
   rules:
     - host: app.local
+
       http:
         paths:
 
-          - path: /auth(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /auth
+            pathType: Prefix
             backend:
               service:
                 name: auth-service
@@ -27,3 +29,19 @@ spec:
                 name: upload-service
                 port:
                   number: 3000
+
+          - path: /status
+            pathType: Prefix
+            backend:
+              service:
+                name: status-service
+                port:
+                  number: 80
+
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dashboard-ui
+                port:
+                  number: 80
