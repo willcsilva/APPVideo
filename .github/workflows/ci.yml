@@ -216,7 +216,7 @@ jobs:
         run: |
           kubectl delete ingress auth-ingress -n backend --ignore-not-found=true
           kubectl delete ingress videos-ingress -n backend --ignore-not-found=true
-          kubectl delete job localstack-bootstrap -n infra--ignore-not-found=true
+          kubectl delete job localstack-bootstrap -n infra --ignore-not-found=true
 
       - name: Deploy infraestrutura
         run: |
