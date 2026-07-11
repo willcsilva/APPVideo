@@ -1,15 +1,13 @@
 import express from "express";
 import cors from "cors";
+import pkg from "pg";
 
-const express = require("express");
-const cors = require("cors");
-const { Client } = require("pg");
+const { Client } = pkg;
 
 const app = express();
 const port = 3005;
 
 app.use(cors());
-const app = express();
 app.use(express.json());
 
 const dbConfig = {
