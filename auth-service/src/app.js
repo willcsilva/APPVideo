@@ -104,7 +104,7 @@ app.get("/health", async (_req, res) => {
  *       409:
  *         description: Usuário já existe
  */
-app.post("/register", async (req, res) => {
+app.post("/auth/register", async (req, res) => {
   const client = await pool.connect();
 
   try {
@@ -183,7 +183,7 @@ app.post("/register", async (req, res) => {
  *       401:
  *         description: Credenciais inválidas
  */
-app.post("/login", async (req, res) => {
+app.post("/auth/login", async (req, res) => {
   const client = await pool.connect();
 
   try {
@@ -268,7 +268,7 @@ app.post("/login", async (req, res) => {
  *       401:
  *         description: Token inválido
  */
-app.get("/me", authMiddleware, async (req, res) => {
+app.get("/auth/me", authMiddleware, async (req, res) => {
   return res.status(200).json({
     message: "Token válido",
     user: req.user,
