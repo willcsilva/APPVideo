@@ -1,0 +1,71 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: localstack-bootstrap
+  namespace: infra
+
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+
+      containers:
+        - name: bootstrap
+
+          image: amazon/aws-cli:2
+
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              value: test
+
+            - name: AWS_SECRET_ACCESS_KEY
+              value: test
+
+            - name: AWS_DEFAULT_REGION
+              value: us-east-1
+
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Aguardando LocalStack..."
+
+              until aws \
+                --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+                sts get-caller-identity >/dev/null 2>&1
+              do
+                sleep 5
+              done
+
+              echo "Criando buckets..."
+
+              aws \
+                --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+                s3 mb s3://raw-videos || true
+
+              aws \
+                --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+                s3 mb s3://processed-images || true
+
+              aws \
+                --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+                s3 mb s3://zip-files || true
+
+              echo "Criando filas..."
+
+              aws \
+                --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+                sqs create-queue \
+                --queue-name video-processing || true
+
+              aws \
+                --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+                sqs create-queue \
+                --queue-name zip-generation || true
+
+              aws \
+                --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+                sqs create-queue \
+                --queue-name notification || true
+
+              echo "Bootstrap concluído."

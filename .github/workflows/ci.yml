@@ -230,6 +230,8 @@ jobs:
           kubectl apply -f k8s/localstack-service.yaml
           kubectl apply -f k8s/infra-config.yaml
           kubectl apply -f k8s/infra-secret.yaml
+          kubectl apply -f k8s/localstack-deployment.yaml
+          kubectl apply -f k8s/localstack-service.yaml
 
       - name: Deploy aplicações
         run: |
