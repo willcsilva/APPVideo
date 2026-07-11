@@ -41,7 +41,7 @@ const { default: app } = await import("../src/app.js");
 describe("Auth Integration Test", () => {
   test("login deve funcionar com banco real", async () => {
     const response = await request(app)
-      .post("/login")
+      .post("/auth/login")
       .send({
         email: "test.integration@fiap.com",
         password: "123456"

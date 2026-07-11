@@ -31,7 +31,7 @@ const { default: app } = await import("../src/app.js");
 describe("Auth Service", () => {
   test("login deve retornar token", async () => {
     const response = await request(app)
-      .post("/login")
+      .post("/auth/login")
       .send({
         email: "will.auth@fiap.com",
         password: "123456"
