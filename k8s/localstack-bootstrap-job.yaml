@@ -12,31 +12,30 @@ spec:
 
       containers:
         - name: bootstrap
-
           image: localstack/localstack:latest
 
           command:
-        - /bin/sh
-        - -c
-        - |
-            sleep 15
+            - /bin/sh
+            - -c
+            - |
+              sleep 15
 
-            awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
-              s3 mb s3://raw-videos || true
+              awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+                s3 mb s3://raw-videos || true
 
-            awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
-              s3 mb s3://processed-images || true
+              awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+                s3 mb s3://processed-images || true
 
-            awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
-              s3 mb s3://zip-files || true
+              awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+                s3 mb s3://zip-files || true
 
-            awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
-              sqs create-queue --queue-name video-processing || true
+              awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+                sqs create-queue --queue-name video-processing || true
 
-            awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
-              sqs create-queue --queue-name zip-generation || true
+              awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+                sqs create-queue --queue-name zip-generation || true
 
-            awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
-              sqs create-queue --queue-name notification || true
+              awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+                sqs create-queue --queue-name notification || true
 
               echo "Bootstrap concluído"
