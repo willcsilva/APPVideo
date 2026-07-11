@@ -13,42 +13,6 @@ import { authMiddleware } from "./middleware/auth.js";
 
 const app = express();
 app.use(cors());
-// const allowedOrigins = [
-//   "http://localhost:8080",
-//   "http://127.0.0.1:8080"
-// ];
-
-app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(
-        new Error("Origin não permitida pelo CORS")
-      );
-    },
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "DELETE",
-      "OPTIONS"
-    ],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization"
-    ],
-    credentials: true
-  })
-);
-
-app.options("*", cors());
 app.use(express.json());
 
 /**
