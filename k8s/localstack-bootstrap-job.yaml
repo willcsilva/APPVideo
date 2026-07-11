@@ -16,28 +16,27 @@ spec:
           image: localstack/localstack:latest
 
           command:
-            - /bin/sh
-            - -c
-            - |
-              echo "Aguardando LocalStack..."
+        - /bin/sh
+        - -c
+        - |
+            sleep 15
 
-              sleep 15
+            awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+              s3 mb s3://raw-videos || true
 
-              echo "Criando buckets..."
+            awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+              s3 mb s3://processed-images || true
 
-              awslocal s3 mb s3://raw-videos || true
-              awslocal s3 mb s3://processed-images || true
-              awslocal s3 mb s3://zip-files || true
+            awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+              s3 mb s3://zip-files || true
 
-              echo "Criando filas..."
+            awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+              sqs create-queue --queue-name video-processing || true
 
-              awslocal sqs create-queue \
-                --queue-name video-processing || true
+            awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+              sqs create-queue --queue-name zip-generation || true
 
-              awslocal sqs create-queue \
-                --queue-name zip-generation || true
-
-              awslocal sqs create-queue \
-                --queue-name notification || true
+            awslocal --endpoint-url=http://localstack.infra.svc.cluster.local:4566 \
+              sqs create-queue --queue-name notification || true
 
               echo "Bootstrap concluído"
