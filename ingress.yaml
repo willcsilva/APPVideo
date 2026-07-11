@@ -5,6 +5,10 @@ metadata:
   name: app-ingress
   namespace: backend
 
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+
 spec:
   ingressClassName: nginx
 
@@ -14,8 +18,8 @@ spec:
       http:
         paths:
 
-          - path: /auth
-            pathType: Prefix
+          - path: /auth(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: auth-service

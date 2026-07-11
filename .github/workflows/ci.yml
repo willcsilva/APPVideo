@@ -230,6 +230,9 @@ jobs:
 
       - name: Deploy no Kubernetes
         run: |
+
+            kubectl delete ingress auth-ingress -n backend --ignore-not-found=true
+            kubectl delete ingress videos-ingress -n backend --ignore-not-found=true
             kubectl apply -f postgres-deployment.yaml
             kubectl apply -f postgres-service.yaml
             kubectl apply -f redis-deployment.yaml
