@@ -5,10 +5,12 @@ const { Client } = require("pg");
 const app = express();
 const port = 3005;
 
-const allowedOrigins = [
-  "http://localhost:8080",
-  "http://127.0.0.1:8080"
-];
+app.use(cors());
+
+// const allowedOrigins = [
+//   "http://localhost:8080",
+//   "http://127.0.0.1:8080"
+// ];
 
 app.use(
   cors({

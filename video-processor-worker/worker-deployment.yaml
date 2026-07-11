@@ -1,38 +1,47 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: video-worker
   namespace: backend
-resources:
-  requests:
-    cpu: "250m"
-    memory: "256Mi"
-  limits:
-    cpu: "1500m"
-    memory: "1Gi"
+
 spec:
   replicas: 1
+
   selector:
     matchLabels:
       app: video-worker
+
   template:
     metadata:
       labels:
         app: video-worker
+
     spec:
       containers:
         - name: worker
+
           image: willcsilva/video-worker:latest
+          imagePullPolicy: Always
+
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+
+            limits:
+              cpu: "1500m"
+              memory: "1Gi"
 
           env:
             - name: NODE_ENV
               value: "stage"
 
             - name: AWS_REGION
-              value: us-east-1
+              value: "us-east-1"
 
             - name: AWS_ENDPOINT
-              value: http://localstack.infra.svc.cluster.local:4566
+              value: "http://localstack.infra.svc.cluster.local:4566"
 
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
@@ -47,25 +56,31 @@ spec:
                   key: AWS_SECRET_ACCESS_KEY
 
             - name: SQS_VIDEO_QUEUE
-              value: video-processing
+              value: "video-processing"
 
             - name: SQS_VIDEO_QUEUE_URL
-              value: http://localstack.infra.svc.cluster.local:4566/000000000000/video-processing
+              value: "http://localstack.infra.svc.cluster.local:4566/000000000000/video-processing"
+
+            - name: SQS_ZIP_QUEUE
+              value: "zip-generation"
+
+            - name: SQS_ZIP_QUEUE_URL
+              value: "http://localstack.infra.svc.cluster.local:4566/000000000000/zip-generation"
 
             - name: S3_RAW_BUCKET
-              value: raw-videos
+              value: "raw-videos"
 
             - name: S3_PROCESSED_BUCKET
-              value: processed-images
+              value: "processed-images"
 
             - name: DB_HOST
-              value: postgres.infra.svc.cluster.local
+              value: "postgres.infra.svc.cluster.local"
 
             - name: DB_PORT
               value: "5432"
 
             - name: DB_NAME
-              value: video_processor
+              value: "video_processor"
 
             - name: DB_USER
               valueFrom:
@@ -80,7 +95,7 @@ spec:
                   key: DB_PASSWORD
 
             - name: LOCAL_VIDEO_DIR
-              value: /tmp/videos
+              value: "/tmp/videos"
 
             - name: LOCAL_FRAMES_DIR
-              value: /tmp/frames
+              value: "/tmp/frames"

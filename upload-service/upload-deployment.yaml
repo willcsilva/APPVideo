@@ -1,30 +1,40 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: upload-service
   namespace: backend
-resources:
-  requests:
-    cpu: "200m"
-    memory: "256Mi"
-  limits:
-    cpu: "1000m"
-    memory: "512Mi"
+
 spec:
   replicas: 1
+
   selector:
     matchLabels:
       app: upload-service
+
   template:
     metadata:
       labels:
         app: upload-service
+
     spec:
       containers:
         - name: upload-service
+
           image: willcsilva/upload-service:latest
+          imagePullPolicy: Always
+
           ports:
             - containerPort: 3000
+
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+
+            limits:
+              cpu: "1000m"
+              memory: "512Mi"
 
           env:
             - name: NODE_ENV
@@ -34,10 +44,10 @@ spec:
               value: "3000"
 
             - name: AWS_REGION
-              value: us-east-1
+              value: "us-east-1"
 
             - name: AWS_ENDPOINT
-              value: http://localstack.infra.svc.cluster.local:4566
+              value: "http://localstack.infra.svc.cluster.local:4566"
 
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
@@ -52,13 +62,13 @@ spec:
                   key: AWS_SECRET_ACCESS_KEY
 
             - name: DB_HOST
-              value: postgres.infra.svc.cluster.local
+              value: "postgres.infra.svc.cluster.local"
 
             - name: DB_PORT
               value: "5432"
 
             - name: DB_NAME
-              value: video_processor
+              value: "video_processor"
 
             - name: DB_USER
               valueFrom:
@@ -72,18 +82,35 @@ spec:
                   name: app-secrets
                   key: DB_PASSWORD
 
-            - name: S3_RAW_BUCKET
-              value: raw-videos
-
-            - name: SQS_VIDEO_QUEUE
-              value: video-processing
-
-            - name: SQS_VIDEO_QUEUE_URL
-              value: http://localstack.infra.svc.cluster.local:4566/000000000000/video-processing
-
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: app-secrets
                   key: JWT_SECRET
-``
+
+            - name: S3_RAW_BUCKET
+              value: "raw-videos"
+
+            - name: SQS_VIDEO_QUEUE
+              value: "video-processing"
+
+            - name: SQS_VIDEO_QUEUE_URL
+              value: "http://localstack.infra.svc.cluster.local:4566/000000000000/video-processing"
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
