@@ -60,7 +60,7 @@ app.post("/videos", authMiddleware, upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "Arquivo não enviado" });
     }
 
-    const userId = "11111111-1111-1111-1111-111111111111"; // temporário
+    const userId = req.user.sub;// temporário
     const videoId = uuidv4();
     const jobId = uuidv4();
     const eventId = uuidv4();

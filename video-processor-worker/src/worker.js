@@ -36,14 +36,14 @@ function extractKeyFromS3Path(s3Path) {
   return s3Path;
 }
 
-async function downloadVideoFromS3(s3Path, videoId) {
+async function downloadVideoFromS3(s3Path, video_id) {
   const key = extractKeyFromS3Path(s3Path);
 
   await fs.mkdir(config.localVideoDir, { recursive: true });
 
   const outputPath = path.join(
     config.localVideoDir,
-    `${videoId}-${path.basename(key)}`
+    `${video_id}-${path.basename(key)}`
   );
 
   const response = await s3.send(
@@ -67,8 +67,8 @@ async function downloadVideoFromS3(s3Path, videoId) {
   };
 }
 
-async function createMockFrames(videoId) {
-  const frameDir = path.join(config.localFramesDir, videoId);
+async function createMockFrames(video_id) {
+  const frameDir = path.join(config.localFramesDir, video_id);
   await fs.mkdir(frameDir, { recursive: true });
 
   const frames = [];
@@ -77,7 +77,7 @@ async function createMockFrames(videoId) {
     const fileName = `frame-00${i}.jpg`;
     const localPath = path.join(frameDir, fileName);
 
-    const fakeImageContent = `fake-jpg-content video=${videoId} frame=${i}`;
+    const fakeImageContent = `fake-jpg-content video=${video_id} frame=${i}`;
     await fs.writeFile(localPath, Buffer.from(fakeImageContent));
 
     frames.push({
@@ -93,12 +93,12 @@ async function createMockFrames(videoId) {
   };
 }
 
-async function uploadFramesToS3(videoId, frames) {
+async function uploadFramesToS3(video_id, frames) {
   const uploaded = [];
 
   for (const frame of frames) {
     const body = await fs.readFile(frame.localPath);
-    const key = `${videoId}/${frame.fileName}`;
+    const key = `${video_id}/${frame.fileName}`;
 
     await s3.send(
       new PutObjectCommand({
@@ -135,7 +135,7 @@ async function registerEvent(eventType, source, payload) {
   }
 }
 
-async function markProcessingStarted(videoId) {
+async function markProcessingStarted(video_id) {
   const client = await pool.connect();
 
   try {
@@ -147,7 +147,7 @@ async function markProcessingStarted(videoId) {
       SET status = $1, updated_at = CURRENT_TIMESTAMP
       WHERE id = $2
       `,
-      ["PROCESSING", videoId]
+      ["PROCESSING", video_id]
     );
 
     await client.query(
@@ -157,7 +157,7 @@ async function markProcessingStarted(videoId) {
       WHERE video_id = $2
         AND type = $3
       `,
-      ["RUNNING", videoId, "PROCESSING"]
+      ["RUNNING", video_id, "PROCESSING"]
     );
 
     await client.query(
@@ -170,7 +170,7 @@ async function markProcessingStarted(videoId) {
         "VIDEO_PROCESSING_STARTED",
         "video-processor-worker",
         JSON.stringify({
-          video_id: videoId,
+          video_id: video_id,
           status: "PROCESSING",
         }),
       ]
@@ -185,11 +185,11 @@ async function markProcessingStarted(videoId) {
   }
 }
 
-async function finalizeFramesExtracted(videoId, uploadedFrames) {
+async function finalizeFramesExtracted(video_id, uploadedFrames) {
   const client = await pool.connect();
 
   try {
-    const imagesPath = `${config.processedBucket}/${videoId}/`;
+    const imagesPath = `${config.processedBucket}/${video_id}/`;
     const zipJobId = uuidv4();
     const eventId = uuidv4();
 
@@ -198,7 +198,7 @@ async function finalizeFramesExtracted(videoId, uploadedFrames) {
       event_type: "FRAMES_READY",
       source: "video-processor-worker",
       payload: {
-        video_id: videoId,
+        video_id: video_id,
         images_path: imagesPath,
         frames_count: uploadedFrames.length,
         files: uploadedFrames.map((f) => f.s3Path),
@@ -215,7 +215,7 @@ async function finalizeFramesExtracted(videoId, uploadedFrames) {
       SET status = $1::varchar, updated_at = CURRENT_TIMESTAMP
       WHERE id = $2::uuid
       `,
-      ["FRAMES_EXTRACTED", videoId]
+      ["FRAMES_EXTRACTED", video_id]
     );
 
     await client.query(
@@ -225,7 +225,7 @@ async function finalizeFramesExtracted(videoId, uploadedFrames) {
       WHERE video_id = $2::uuid
         AND type = $3::varchar
       `,
-      ["COMPLETED", videoId, "PROCESSING"]
+      ["COMPLETED", video_id, "PROCESSING"]
     );
 
     // 2. Mantém apenas 1 output IMAGES por vídeo
@@ -235,7 +235,7 @@ async function finalizeFramesExtracted(videoId, uploadedFrames) {
       WHERE video_id = $1::uuid
         AND type = $2::varchar
       `,
-      [videoId, "IMAGES"]
+      [video_id, "IMAGES"]
     );
 
     await client.query(
@@ -243,7 +243,7 @@ async function finalizeFramesExtracted(videoId, uploadedFrames) {
       INSERT INTO outputs (id, video_id, type, s3_path)
       VALUES ($1::uuid, $2::uuid, $3::varchar, $4::varchar)
       `,
-      [uuidv4(), videoId, "IMAGES", imagesPath]
+      [uuidv4(), video_id, "IMAGES", imagesPath]
     );
 
     // 3. Só cria o job ZIP se ainda não existir
@@ -255,7 +255,7 @@ async function finalizeFramesExtracted(videoId, uploadedFrames) {
         AND type = $2::varchar
       LIMIT 1
       `,
-      [videoId, "ZIP"]
+      [video_id, "ZIP"]
     );
 
     if (existingZipJob.rowCount === 0) {
@@ -264,7 +264,7 @@ async function finalizeFramesExtracted(videoId, uploadedFrames) {
         INSERT INTO jobs (id, video_id, type, status, attempts)
         VALUES ($1::uuid, $2::uuid, $3::varchar, $4::varchar, $5::int)
         `,
-        [zipJobId, videoId, "ZIP", "PENDING", 0]
+        [zipJobId, video_id, "ZIP", "PENDING", 0]
       );
     }
 
@@ -325,7 +325,7 @@ async function processMessage(message) {
   level: "info",
   service: "video-worker",
   message: "Processando vídeo",
-  video_id: videoId,
+  video_id,
   timestamp: new Date().toISOString()
 }));
   console.log("Origem no S3:", s3_path);
