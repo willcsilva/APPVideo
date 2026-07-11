@@ -5,6 +5,9 @@ metadata:
   name: app-ingress
   namespace: backend
 
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "500m"
+
 spec:
   ingressClassName: nginx
 
