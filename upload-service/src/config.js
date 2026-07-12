@@ -1,9 +1,28 @@
 export const config = {
   awsRegion: process.env.AWS_REGION || "us-east-1",
   awsEndpoint: process.env.AWS_ENDPOINT,
+
   rawBucket: process.env.S3_RAW_BUCKET || "raw-videos",
-  queueName: process.env.SQS_VIDEO_QUEUE || "video-processing",
+
+  queueName:
+    process.env.SQS_VIDEO_QUEUE ||
+    "video-processing",
+
   queueUrl:
     process.env.SQS_VIDEO_QUEUE_URL ||
-    `${process.env.AWS_ENDPOINT}/000000000000/${process.env.SQS_VIDEO_QUEUE || "video-processing"}`,
+    `${process.env.AWS_ENDPOINT}/000000000000/${
+      process.env.SQS_VIDEO_QUEUE ||
+      "video-processing"
+    }`,
+
+  notificationQueueName:
+    process.env.SQS_NOTIFICATION_QUEUE ||
+    "notification",
+
+  notificationQueueUrl:
+    process.env.SQS_NOTIFICATION_QUEUE_URL ||
+    `${process.env.AWS_ENDPOINT}/000000000000/${
+      process.env.SQS_NOTIFICATION_QUEUE ||
+      "notification"
+    }`,
 };

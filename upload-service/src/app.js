@@ -88,7 +88,7 @@ app.post("/videos", authMiddleware, upload.single("file"), async (req, res) => {
     // 3. Publicação no SQS
     await sqs.send(
       new SendMessageCommand({
-        QueueUrl: process.env.SQS_NOTIFICATION_QUEUE_URL,
+        QueueUrl: config.notificationQueueUrl,
         MessageBody: JSON.stringify({
           event_type: "VIDEO_RECEIVED",
           payload: {
