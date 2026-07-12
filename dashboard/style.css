@@ -214,3 +214,17 @@ tr:hover {
   }
 
 }
+
+.download-btn {
+  background: #0ea5e9;
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 12px;
+  display: inline-block;
+}
+
+.download-btn:hover {
+  background: #0284c7;
+}

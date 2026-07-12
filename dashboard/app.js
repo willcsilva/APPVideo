@@ -22,7 +22,7 @@ async function login() {
 
     const data = await response.json();
 
-    if (data.access_token) {
+    if (response.ok && data.access_token) {
       token = data.access_token;
 
       localStorage.setItem("jwt", token);
@@ -31,10 +31,9 @@ async function login() {
         "<p class='online'>✅ Login realizado com sucesso</p>";
 
       loadVideos();
-
     } else {
       document.getElementById("login-status").innerHTML =
-        "<p class='error'>❌ Login inválido</p>";
+        `<p class="error">❌ ${data.error || "Login inválido"}</p>`;
     }
 
   } catch (error) {
@@ -59,25 +58,82 @@ async function uploadVideo() {
     return;
   }
 
+  const allowedExtensions = [
+    ".mp4",
+    ".mov"
+  ];
+
+  const fileName = file.name.toLowerCase();
+
+  const validExtension =
+    allowedExtensions.some(ext =>
+      fileName.endsWith(ext)
+    );
+
+  if (!validExtension) {
+    alert(
+      "Somente arquivos MP4 ou MOV são permitidos."
+    );
+    return;
+  }
+
+  const MAX_FILE_SIZE =
+    10 * 1024 * 1024;
+
+  if (file.size > MAX_FILE_SIZE) {
+    alert(
+      "Arquivo excede o limite máximo de 10 MB."
+    );
+    return;
+  }
+
   const formData = new FormData();
-  formData.append("file", file);
+
+  formData.append(
+    "file",
+    file
+  );
 
   try {
 
-    const response = await fetch(`${UPLOAD_URL}/videos`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
-      body: formData
-    });
+    const response = await fetch(
+      `${UPLOAD_URL}/videos`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: formData
+      }
+    );
 
-    const data = await response.json();
+    const data =
+      await response.json();
 
-    document.getElementById("upload-result").innerHTML = `
-      <p class="online">✅ Upload concluído</p>
-      <p><strong>Job:</strong> ${data.job_id}</p>
-      <p><strong>Vídeo:</strong> ${data.video_id}</p>
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        data.message ||
+        "Erro ao realizar upload"
+      );
+    }
+
+    document.getElementById(
+      "upload-result"
+    ).innerHTML = `
+      <p class="online">
+        ✅ Upload concluído
+      </p>
+
+      <p>
+        <strong>Job:</strong>
+        ${data.job_id}
+      </p>
+
+      <p>
+        <strong>Vídeo:</strong>
+        ${data.video_id}
+      </p>
     `;
 
     loadVideos();
@@ -86,8 +142,13 @@ async function uploadVideo() {
 
     console.error(error);
 
-    document.getElementById("upload-result").innerHTML =
-      "<p class='error'>❌ Erro ao enviar vídeo</p>";
+    document.getElementById(
+      "upload-result"
+    ).innerHTML = `
+      <p class="error">
+        ❌ ${error.message}
+      </p>
+    `;
   }
 }
 
@@ -95,17 +156,31 @@ async function loadStatus() {
 
   try {
 
-    const response = await fetch(`${STATUS_URL}/status`);
-    const data = await response.json();
+    const response = await fetch(
+      `${STATUS_URL}/status`
+    );
 
-    document.getElementById("infra-status").innerHTML = `
+    const data =
+      await response.json();
+
+    document.getElementById(
+      "infra-status"
+    ).innerHTML = `
       <div class="info-row">
-        <span class="info-label">API:</span>
-        <span class="online">${data.services.api}</span>
+        <span class="info-label">
+          API:
+        </span>
+
+        <span class="online">
+          ${data.services.api}
+        </span>
       </div>
 
       <div class="info-row">
-        <span class="info-label">Database:</span>
+        <span class="info-label">
+          Database:
+        </span>
+
         <span class="${
           data.services.database === "ok"
             ? "online"
@@ -118,13 +193,15 @@ async function loadStatus() {
 
   } catch (error) {
 
-    document.getElementById("infra-status").innerHTML = `
+    console.error(error);
+
+    document.getElementById(
+      "infra-status"
+    ).innerHTML = `
       <p class="error">
         ❌ Status Service indisponível
       </p>
     `;
-
-    console.error(error);
   }
 }
 
@@ -136,20 +213,36 @@ async function loadVideos() {
 
   try {
 
-    const response = await fetch(`${UPLOAD_URL}/videos`, {
-      headers: {
-        Authorization: `Bearer ${token}`
+    const response = await fetch(
+      `${UPLOAD_URL}/videos`,
+      {
+        headers: {
+          Authorization:
+            `Bearer ${token}`
+        }
       }
-    });
+    );
 
-    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(
+        "Erro ao carregar vídeos"
+      );
+    }
+
+    const data =
+      await response.json();
 
     const table =
-      document.getElementById("video-table");
+      document.getElementById(
+        "video-table"
+      );
 
     table.innerHTML = "";
 
-    if (!data.items || data.items.length === 0) {
+    if (
+      !data.items ||
+      data.items.length === 0
+    ) {
 
       table.innerHTML = `
         <tr>
@@ -164,32 +257,42 @@ async function loadVideos() {
 
     data.items.forEach(video => {
 
-      let statusClass = "status-received";
+      let statusClass =
+        "status-received";
 
-      if (video.status === "PROCESSING") {
-        statusClass = "status-processing";
+      if (
+        video.status === "PROCESSING"
+      ) {
+        statusClass =
+          "status-processing";
       }
 
       if (
         video.status === "COMPLETED" ||
         video.status === "DONE"
       ) {
-        statusClass = "status-completed";
+        statusClass =
+          "status-completed";
       }
 
       if (
         video.status === "FAILED" ||
         video.status === "ERROR"
       ) {
-        statusClass = "status-error";
+        statusClass =
+          "status-error";
       }
 
       table.innerHTML += `
         <tr>
-          <td>${video.file_name}</td>
 
           <td>
-            <span class="status-badge ${statusClass}">
+            ${video.file_name}
+          </td>
+
+          <td>
+            <span
+              class="status-badge ${statusClass}">
               ${video.status}
             </span>
           </td>
@@ -197,10 +300,15 @@ async function loadVideos() {
           <td>
             ${
               video.zip_path
-                ? "✅ Disponível"
+                ? `
+                  ${video.zip_path}
+                    📦 Download ZIP
+                  </a>
+                `
                 : "-"
             }
           </td>
+
         </tr>
       `;
     });
@@ -212,5 +320,12 @@ async function loadVideos() {
 
 loadStatus();
 
-setInterval(loadStatus, 10000);
-setInterval(loadVideos, 10000);
+setInterval(
+  loadStatus,
+  10000
+);
+
+setInterval(
+  loadVideos,
+  10000
+);
