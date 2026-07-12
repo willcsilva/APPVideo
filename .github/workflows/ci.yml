@@ -12,9 +12,10 @@ jobs:
     steps:
       - name: Checkout código
         #uses: actions/checkout@v4
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           fetch-depth: 0
+          push: true
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
@@ -46,12 +47,13 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
+          push: true
 
       # AUTH SERVICE
 
@@ -113,7 +115,8 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        push: true
 
       - name: Definir tag da imagem
         id: vars
@@ -203,7 +206,8 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        push: true
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
