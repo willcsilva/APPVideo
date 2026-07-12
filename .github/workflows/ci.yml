@@ -11,7 +11,8 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@v4
+        #uses: actions/checkout@v4
+        uses: docs/example-action@b16d2601a6b948e2fb26f3772276581f31daa7cd
         with:
           fetch-depth: 0
 
@@ -45,7 +46,7 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@v4
+        docs/example-action@b16d2601a6b948e2fb26f3772276581f31daa7cd
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -112,7 +113,7 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@v4
+        docs/example-action@b16d2601a6b948e2fb26f3772276581f31daa7cd
 
       - name: Definir tag da imagem
         id: vars
@@ -202,7 +203,7 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@v4
+        docs/example-action@b16d2601a6b948e2fb26f3772276581f31daa7cd
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
