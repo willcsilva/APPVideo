@@ -66,6 +66,7 @@ app.post("/videos", authMiddleware, upload.single("file"), async (req, res) => {
       payload: {
         video_id: videoId,
         user_id: userId,
+        user_email: req.user.email,
         s3_path: s3Path,
       },
       created_at: new Date().toISOString(),
@@ -87,8 +88,14 @@ app.post("/videos", authMiddleware, upload.single("file"), async (req, res) => {
     // 3. Publicação no SQS
     await sqs.send(
       new SendMessageCommand({
-        QueueUrl: config.queueUrl,
-        MessageBody: JSON.stringify(eventPayload),
+        QueueUrl: process.env.SQS_NOTIFICATION_QUEUE_URL,
+        MessageBody: JSON.stringify({
+          event_type: "VIDEO_RECEIVED",
+          payload: {
+            video_id: videoId,
+            user_email: req.user.email
+          }
+        })
       })
     );
 
