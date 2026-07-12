@@ -27,20 +27,20 @@ async function login() {
 
       localStorage.setItem("jwt", token);
 
-      document.getElementById("login-status").innerText =
+      document.getElementById("login-status").innerHTML =
         "<p class='online'>✅ Login realizado com sucesso</p>";
 
       loadVideos();
 
     } else {
-      document.getElementById("login-status").innerText =
+      document.getElementById("login-status").innerHTML =
         "<p class='error'>❌ Login inválido</p>";
     }
 
   } catch (error) {
     console.error(error);
 
-    document.getElementById("login-status").innerText =
+    document.getElementById("login-status").innerHTML =
       "<p class='error'>❌ Erro ao conectar com Auth Service</p>";
   }
 }
@@ -74,7 +74,7 @@ async function uploadVideo() {
 
     const data = await response.json();
 
-    document.getElementById("upload-result").innerText = `
+    document.getElementById("upload-result").innerHTML = `
       <p class="online">✅ Upload concluído</p>
       <p><strong>Job:</strong> ${data.job_id}</p>
       <p><strong>Vídeo:</strong> ${data.video_id}</p>
@@ -86,7 +86,7 @@ async function uploadVideo() {
 
     console.error(error);
 
-    document.getElementById("upload-result").innerText =
+    document.getElementById("upload-result").innerHTML =
       "<p class='error'>❌ Erro ao enviar vídeo</p>";
   }
 }
@@ -98,7 +98,7 @@ async function loadStatus() {
     const response = await fetch(`${STATUS_URL}/status`);
     const data = await response.json();
 
-    document.getElementById("infra-status").innerText = `
+    document.getElementById("infra-status").innerHTML = `
       <div class="info-row">
         <span class="info-label">API:</span>
         <span class="online">${data.services.api}</span>
@@ -118,7 +118,7 @@ async function loadStatus() {
 
   } catch (error) {
 
-    document.getElementById("infra-status").innerText = `
+    document.getElementById("infra-status").innerHTML = `
       <p class="error">
         ❌ Status Service indisponível
       </p>
@@ -147,11 +147,11 @@ async function loadVideos() {
     const table =
       document.getElementById("video-table");
 
-    table.innerText = "";
+    table.innerHTML = "";
 
     if (!data.items || data.items.length === 0) {
 
-      table.innerText = `
+      table.innerHTML = `
         <tr>
           <td colspan="3">
             Nenhum vídeo enviado
@@ -184,7 +184,7 @@ async function loadVideos() {
         statusClass = "status-error";
       }
 
-      table.innerText += `
+      table.innerHTML += `
         <tr>
           <td>${video.file_name}</td>
 
