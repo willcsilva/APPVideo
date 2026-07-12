@@ -1,18 +1,13 @@
 FROM node:22-alpine
 
-RUN addgroup -S nonroot \
-    && adduser -S nonroot -G nonroot
-
-USER nonroot
-
 WORKDIR /app
+RUN chown node:node /app
 
-COPY package*.json ./
+USER node
 
+COPY --chown=node:node package*.json ./
 RUN npm install --ignore-scripts
 
-COPY . .
-
-EXPOSE 3005
+COPY --chown=node:node . .
 
 CMD ["npm", "start"]
