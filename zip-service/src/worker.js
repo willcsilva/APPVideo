@@ -1,6 +1,7 @@
 import {
   ReceiveMessageCommand,
   DeleteMessageCommand,
+  SendMessageCommand,
 } from "@aws-sdk/client-sqs";
 import {
   GetObjectCommand,
@@ -212,7 +213,11 @@ async function processMessage(message) {
     return;
   }
 
-  const { video_id, files } = parsed.payload || {};
+  const {
+    video_id,
+    files,
+    user_email
+  } = parsed.payload || {};
 
   if (!video_id || !Array.isArray(files) || files.length === 0) {
     throw new Error("Payload inválido: video_id/files ausentes");
@@ -242,13 +247,45 @@ async function processMessage(message) {
 
   console.log("ZIP enviado para S3:", uploadedZip);
 
-  // 4. Atualiza banco e eventos
-  await finalizeZipCompleted(videoId, uploadedZip.s3Path);
+// 4. Atualiza banco e eventos
+  await finalizeZipCompleted(
+    videoId,
+    uploadedZip.s3Path
+  );
+
+  // 5. Publica evento para notification-service
+  if (user_email) {
+
+    await sqs.send(
+      new SendMessageCommand({
+        QueueUrl: config.notificationQueueUrl,
+
+        MessageBody: JSON.stringify({
+          event_type: "VIDEO_COMPLETED",
+
+          payload: {
+            video_id: videoId,
+            user_email,
+            zip_path: uploadedZip.s3Path
+          }
+        })
+      })
+    );
+
+    console.log(
+      "Notificação VIDEO_COMPLETED enviada:",
+      {
+        video_id: videoId,
+        user_email
+      }
+    );
+  }
 
   console.log("Vídeo finalizado como COMPLETED:", {
     video_id: videoId,
     zip_path: uploadedZip.s3Path,
   });
+
 }
 
 async function pollQueue() {

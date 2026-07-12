@@ -185,7 +185,11 @@ async function markProcessingStarted(video_id) {
   }
 }
 
-async function finalizeFramesExtracted(video_id, uploadedFrames) {
+async function finalizeFramesExtracted(
+    video_id,
+    uploadedFrames,
+    userEmail
+  ) {
   const client = await pool.connect();
 
   try {
@@ -199,6 +203,7 @@ async function finalizeFramesExtracted(video_id, uploadedFrames) {
       source: "video-processor-worker",
       payload: {
         video_id: video_id,
+        user_email: userEmail,
         images_path: imagesPath,
         frames_count: uploadedFrames.length,
         files: uploadedFrames.map((f) => f.s3Path),
@@ -302,6 +307,27 @@ async function publishFramesReady(eventPayload) {
   );
 }
 
+async function publishProcessingNotification(
+  videoId,
+  userEmail
+) {
+  await sqs.send(
+    new SendMessageCommand({
+      QueueUrl:
+        process.env.SQS_NOTIFICATION_QUEUE_URL,
+
+      MessageBody: JSON.stringify({
+        event_type: "VIDEO_PROCESSING",
+
+        payload: {
+          video_id: videoId,
+          user_email: userEmail
+        }
+      })
+    })
+  );
+}
+
 async function processMessage(message) {
   if (!message.Body) {
     console.log("Mensagem sem body, ignorando...");
@@ -315,7 +341,11 @@ async function processMessage(message) {
     return;
   }
 
-  const { video_id, s3_path } = parsed.payload || {};
+  const {
+  video_id,
+  s3_path,
+  user_email
+  } = parsed.payload || {};
 
   if (!video_id || !s3_path) {
     throw new Error("Payload inválido: video_id ou s3_path ausente");
@@ -331,7 +361,16 @@ async function processMessage(message) {
   console.log("Origem no S3:", s3_path);
 
   // 1. Marca vídeo como PROCESSING
+  // 1. Marca vídeo como PROCESSING
   await markProcessingStarted(video_id);
+
+  // Notifica usuário
+  if (user_email) {
+    await publishProcessingNotification(
+      video_id,
+      user_email
+    );
+  }
 
   // 2. Download do vídeo
   const downloadResult = await downloadVideoFromS3(s3_path, video_id);
@@ -369,7 +408,12 @@ async function processMessage(message) {
   });
 
   // 5. Fecha etapa no banco + cria ZIP job + gera payload do evento
-  const framesReadyEvent = await finalizeFramesExtracted(video_id, uploadedFrames);
+  const framesReadyEvent =
+    await finalizeFramesExtracted(
+      video_id,
+      uploadedFrames,
+      user_email
+    );
 
   console.log("Evento FRAMES_READY preparado:", framesReadyEvent);
 

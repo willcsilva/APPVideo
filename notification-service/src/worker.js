@@ -8,6 +8,10 @@ import { sqs } from "./infra/sqs.js";
 import { sendEmail } from "./infra/ses.js";
 import { config } from "./config.js";
 
+const DASHBOARD_URL =
+  process.env.DASHBOARD_URL ||
+  "http://app.local:30741";
+
 function calculateBackoffSeconds(receiveCount) {
   const attempt = Number(receiveCount || 1);
 
@@ -19,12 +23,73 @@ function calculateBackoffSeconds(receiveCount) {
   return 300;
 }
 
+function buildNotification(eventType, payload) {
+
+  switch (eventType) {
+
+    case "VIDEO_RECEIVED":
+      return {
+        subject: "APPVideo - Vídeo recebido",
+        body: `
+Seu vídeo foi recebido com sucesso.
+
+ID do Vídeo:
+${payload.video_id}
+
+Acompanhe o processamento acessando:
+
+${DASHBOARD_URL}
+`
+      };
+
+    case "VIDEO_PROCESSING":
+      return {
+        subject: "APPVideo - Vídeo em processamento",
+        body: `
+Seu vídeo está em processamento.
+
+ID do Vídeo:
+${payload.video_id}
+
+Acompanhe o progresso em:
+
+${DASHBOARD_URL}
+`
+      };
+
+    case "VIDEO_COMPLETED":
+      return {
+        subject: "APPVideo - Vídeo concluído",
+        body: `
+Seu vídeo foi processado com sucesso.
+
+ID do Vídeo:
+${payload.video_id}
+
+ZIP:
+${payload.zip_path || "Disponível no Dashboard"}
+
+Acesse:
+
+${DASHBOARD_URL}
+`
+      };
+
+    default:
+      return null;
+  }
+}
+
 async function processMessage(message) {
+
   let parsed;
 
   try {
+
     parsed = JSON.parse(message.Body);
+
   } catch (err) {
+
     console.error(
       JSON.stringify({
         level: "error",
@@ -35,7 +100,6 @@ async function processMessage(message) {
       })
     );
 
-    // remove mensagem inválida (não adianta retry)
     if (message.ReceiptHandle) {
       await sqs.send(
         new DeleteMessageCommand({
@@ -48,29 +112,56 @@ async function processMessage(message) {
     return;
   }
 
-  if (parsed.event_type === "VIDEO_COMPLETED") {
-    const { video_id, zip_path } = parsed.payload;
+  const notification =
+    buildNotification(
+      parsed.event_type,
+      parsed.payload || {}
+    );
 
-    console.log(
+  if (!notification) {
+    return;
+  }
+
+  const recipient =
+    parsed.payload?.user_email;
+
+  if (!recipient) {
+
+    console.error(
       JSON.stringify({
-        level: "info",
+        level: "error",
         service: "notification-service",
-        message: "Enviando notificação de sucesso",
-        video_id,
+        message: "Payload sem user_email",
+        event_type: parsed.event_type,
         timestamp: new Date().toISOString(),
       })
     );
 
-    await sendEmail(
-      "teste@fiap.com",
-      "Processamento concluído",
-      `Seu vídeo ${video_id} foi processado.\nDownload: ${zip_path}`
-    );
+    return;
   }
+
+  console.log(
+    JSON.stringify({
+      level: "info",
+      service: "notification-service",
+      message: "Enviando e-mail",
+      event_type: parsed.event_type,
+      recipient,
+      timestamp: new Date().toISOString(),
+    })
+  );
+
+  await sendEmail(
+    recipient,
+    notification.subject,
+    notification.body
+  );
 }
 
 async function pollQueue() {
+
   try {
+
     const response = await sqs.send(
       new ReceiveMessageCommand({
         QueueUrl: config.notificationQueueUrl,
@@ -81,10 +172,15 @@ async function pollQueue() {
       })
     );
 
-    if (!response.Messages || response.Messages.length === 0) return;
+    if (!response.Messages ||
+        response.Messages.length === 0) {
+      return;
+    }
 
     for (const message of response.Messages) {
+
       try {
+
         await processMessage(message);
 
         await sqs.send(
@@ -93,29 +189,43 @@ async function pollQueue() {
             ReceiptHandle: message.ReceiptHandle,
           })
         );
+
       } catch (error) {
+
         console.error(
           JSON.stringify({
             level: "error",
             service: "notification-service",
-            message: "Falha no processamento da notificação",
+            message:
+              "Falha no processamento da notificação",
             error: error.message,
             timestamp: new Date().toISOString(),
           })
         );
 
         try {
-          const receiveCount =
-            message.Attributes?.ApproximateReceiveCount || "1";
 
-          const backoffSeconds = calculateBackoffSeconds(receiveCount);
+          const receiveCount =
+            message.Attributes
+              ?.ApproximateReceiveCount || "1";
+
+          const backoffSeconds =
+            calculateBackoffSeconds(
+              receiveCount
+            );
 
           if (message.ReceiptHandle) {
+
             await sqs.send(
               new ChangeMessageVisibilityCommand({
-                QueueUrl: config.notificationQueueUrl,
-                ReceiptHandle: message.ReceiptHandle,
-                VisibilityTimeout: backoffSeconds,
+                QueueUrl:
+                  config.notificationQueueUrl,
+
+                ReceiptHandle:
+                  message.ReceiptHandle,
+
+                VisibilityTimeout:
+                  backoffSeconds,
               })
             );
 
@@ -123,35 +233,58 @@ async function pollQueue() {
               JSON.stringify({
                 level: "warn",
                 service: "notification-service",
-                message: "Backoff aplicado à mensagem",
-                receive_count: receiveCount,
-                visibility_timeout: backoffSeconds,
-                timestamp: new Date().toISOString(),
+                message:
+                  "Backoff aplicado à mensagem",
+
+                receive_count:
+                  receiveCount,
+
+                visibility_timeout:
+                  backoffSeconds,
+
+                timestamp:
+                  new Date().toISOString(),
               })
             );
           }
+
         } catch (visibilityError) {
+
           console.error(
             JSON.stringify({
               level: "error",
-              service: "notification-service",
-              message: "Erro ao aplicar backoff",
-              error: visibilityError.message,
-              timestamp: new Date().toISOString(),
+              service:
+                "notification-service",
+
+              message:
+                "Erro ao aplicar backoff",
+
+              error:
+                visibilityError.message,
+
+              timestamp:
+                new Date().toISOString(),
             })
           );
         }
-
       }
     }
+
   } catch (err) {
+
     console.error(
       JSON.stringify({
         level: "error",
-        service: "notification-service",
-        message: "Erro no polling da fila",
+        service:
+          "notification-service",
+
+        message:
+          "Erro no polling da fila",
+
         error: err.message,
-        timestamp: new Date().toISOString(),
+
+        timestamp:
+          new Date().toISOString(),
       })
     );
   }
