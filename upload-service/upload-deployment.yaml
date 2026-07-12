@@ -96,6 +96,12 @@ spec:
 
             - name: SQS_VIDEO_QUEUE_URL
               value: "http://localstack.infra.svc.cluster.local:4566/000000000000/video-processing"
+            
+            - name: SQS_NOTIFICATION_QUEUE
+              value: notification
+
+            - name: SQS_NOTIFICATION_QUEUE_URL
+              value: http://localstack.infra.svc.cluster.local:4566/000000000000/notification
 
           livenessProbe:
             httpGet:

@@ -63,3 +63,6 @@ spec:
 
             - name: NOTIFICATION_EMAIL
               value: "teste@fiap.com"
+              
+            - name: EMAIL_FROM
+              value: noreply@appvideo.local

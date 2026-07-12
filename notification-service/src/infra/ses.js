@@ -11,7 +11,9 @@ export const ses = new SESClient({
 
 export async function sendEmail(to, subject, body) {
   const command = new SendEmailCommand({
-    Source: "teste@fiap.com",
+    Source:
+    process.env.EMAIL_FROM ||
+    "noreply@appvideo.local",
     Destination: {
       ToAddresses: [to],
     },
