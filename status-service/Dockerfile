@@ -4,9 +4,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-#RUN npm install
-RUN npx --ignore-scripts some-package
-RUN npm exec --ignore-scripts -- some-package
+RUN npm ci --ignore-scripts
 
 COPY . .
 
