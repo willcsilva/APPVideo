@@ -1,0 +1,19 @@
+# Arquivo: .github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/" # Monitora todos os workflows dentro de .github/workflows
+    schedule:
+      interval: "weekly" # Opções: "daily", "weekly" ou "monthly"
+    
+    # Opcional: Adiciona labels automáticas nos PRs gerados
+    labels:
+      - "ci"
+      - "dependencies"
+      - "automated pr"
+    
+    # Opcional: Agrupa todas as atualizações de Actions em um único PR
+    groups:
+      actions-dependencies:
+        patterns:
+          - "*"
