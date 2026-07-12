@@ -218,6 +218,8 @@ async function processMessage(message) {
     files,
     user_email
   } = parsed.payload || {};
+  
+  console.log("Payload recebido:", parsed.payload);
 
   if (!video_id || !Array.isArray(files) || files.length === 0) {
     throw new Error("Payload inválido: video_id/files ausentes");
