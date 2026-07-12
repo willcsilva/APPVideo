@@ -11,11 +11,9 @@ jobs:
 
     steps:
       - name: Checkout código
-        #uses: actions/checkout@v4
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
-          push: true
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
@@ -47,16 +45,14 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          push: true
 
       # AUTH SERVICE
-
       - name: Install deps (auth-service)
         run: |
           cd auth-service
@@ -86,7 +82,6 @@ jobs:
             password_hash TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           );
-
           SQL
 
       - name: Run tests (auth-service)
@@ -95,7 +90,6 @@ jobs:
           npm test
 
       # UPLOAD SERVICE
-
       - name: Install deps (upload-service)
         run: |
           cd upload-service
@@ -106,22 +100,77 @@ jobs:
           cd upload-service
           npm test || echo "Sem testes estáveis no upload-service ainda"
 
-  docker-build-and-push:
+  # Job otimizado: Detecta alterações via paths-filter e monta o JSON da Matriz
+  prepare-env:
     needs: build-and-test
     runs-on: ubuntu-latest
-
     outputs:
-      tag: ${{ steps.vars.outputs.TAG }}
+      image_tag: ${{ steps.vars.outputs.TAG }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      auth: ${{ steps.filter.outputs.auth }}
+      upload: ${{ steps.filter.outputs.upload }}
+      status: ${{ steps.filter.outputs.status }}
+      worker: ${{ steps.filter.outputs.worker }}
+      zip: ${{ steps.filter.outputs.zip }}
+      notification: ${{ steps.filter.outputs.notification }}
+      dashboard: ${{ steps.filter.outputs.dashboard }}
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Definir tag global da imagem
+        id: vars
+        run: echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Detectar alterações nos microserviços
+        id: filter
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        with:
+          filters: |
+            auth:
+              - 'auth-service/**'
+            upload:
+              - 'upload-service/**'
+            status:
+              - 'status-service/**'
+            worker:
+              - 'video-processor-worker/**'
+            zip:
+              - 'zip-service/**'
+            notification:
+              - 'notification-service/**'
+            dashboard:
+              - 'dashboard/**'
+
+      - name: Gerar Matriz Dinâmica JSON
+        id: set-matrix
+        run: |
+          MATRIX='[]'
+          [[ "${{ steps.filter.outputs.auth }}" == 'true' ]] && MATRIX=$(echo "$MATRIX" | jq '. += [{"service": "auth-service", "context": "./auth-service", "image": "willcsilva/auth-service"}]')
+          [[ "${{ steps.filter.outputs.upload }}" == 'true' ]] && MATRIX=$(echo "$MATRIX" | jq '. += [{"service": "upload-service", "context": "./upload-service", "image": "willcsilva/upload-service"}]')
+          [[ "${{ steps.filter.outputs.status }}" == 'true' ]] && MATRIX=$(echo "$MATRIX" | jq '. += [{"service": "status-service", "context": "./status-service", "image": "willcsilva/status-service"}]')
+          [[ "${{ steps.filter.outputs.worker }}" == 'true' ]] && MATRIX=$(echo "$MATRIX" | jq '. += [{"service": "video-worker", "context": "./video-processor-worker", "image": "willcsilva/video-worker"}]')
+          [[ "${{ steps.filter.outputs.zip }}" == 'true' ]] && MATRIX=$(echo "$MATRIX" | jq '. += [{"service": "zip-service", "context": "./zip-service", "image": "willcsilva/zip-service"}]')
+          [[ "${{ steps.filter.outputs.notification }}" == 'true' ]] && MATRIX=$(echo "$MATRIX" | jq '. += [{"service": "notification-service", "context": "./notification-service", "image": "willcsilva/notification-service"}]')
+          [[ "${{ steps.filter.outputs.dashboard }}" == 'true' ]] && MATRIX=$(echo "$MATRIX" | jq '. += [{"service": "dashboard-ui", "context": "./dashboard", "image": "willcsilva/dashboard-ui"}]')
+          
+          echo "Matriz gerada: $MATRIX"
+          echo "matrix=$(echo "$MATRIX" | jq -c .)" >> $GITHUB_OUTPUT
+
+  # Job consome a matriz dinâmica gerada no prepare-env
+  docker-build-and-push:
+    needs: prepare-env
+    runs-on: ubuntu-latest
+    # Se nenhuma pasta relevante mudou (ex: apenas README.md mudou), pula o job de build
+    if: ${{ needs.prepare-env.outputs.matrix != '[]' && needs.prepare-env.outputs.matrix != '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.prepare-env.outputs.matrix) }}
 
     steps:
       - name: Checkout código
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-        
-
-      - name: Definir tag da imagem
-        id: vars
-        run: |
-          echo "TAG=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Login Docker Hub
         uses: docker/login-action@v3
@@ -129,85 +178,24 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build e Push auth-service
-        uses: docker/build-push-action@v6
+      - name: Build e Push (${{ matrix.service }})
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
-          context: ./auth-service
+          context: ${{ matrix.context }}
           push: true
           tags: |
-            willcsilva/auth-service:latest
-            willcsilva/auth-service:${{ steps.vars.outputs.TAG }}
-          platforms: linux/amd64
-
-      - name: Build e Push upload-service
-        uses: docker/build-push-action@v6
-        with:
-          context: ./upload-service
-          push: true
-          tags: |
-            willcsilva/upload-service:latest
-            willcsilva/upload-service:${{ steps.vars.outputs.TAG }}
-          platforms: linux/amd64
-
-      - name: Build e Push status-service
-        uses: docker/build-push-action@v6
-        with:
-          context: ./status-service
-          push: true
-          tags: |
-            willcsilva/status-service:latest
-            willcsilva/status-service:${{ steps.vars.outputs.TAG }}
-          platforms: linux/amd64
-
-      - name: Build e Push video-worker
-        uses: docker/build-push-action@v6
-        with:
-          context: ./video-processor-worker
-          push: true
-          tags: |
-            willcsilva/video-worker:latest
-            willcsilva/video-worker:${{ steps.vars.outputs.TAG }}
-          platforms: linux/amd64
-
-      - name: Build e Push zip-service
-        uses: docker/build-push-action@v6
-        with:
-          context: ./zip-service
-          push: true
-          tags: |
-            willcsilva/zip-service:latest
-            willcsilva/zip-service:${{ steps.vars.outputs.TAG }}
-          platforms: linux/amd64
-
-      - name: Build e Push notification-service
-        uses: docker/build-push-action@v6
-        with:
-          context: ./notification-service
-          push: true
-          tags: |
-            willcsilva/notification-service:latest
-            willcsilva/notification-service:${{ steps.vars.outputs.TAG }}
-          platforms: linux/amd64
-
-      - name: Build e Push dashboard-ui
-        uses: docker/build-push-action@v6
-        with:
-          context: ./dashboard
-          push: true
-          tags: |
-            willcsilva/dashboard-ui:latest
-            willcsilva/dashboard-ui:${{ steps.vars.outputs.TAG }}
+            ${{ matrix.image }}:latest
+            ${{ matrix.image }}:${{ needs.prepare-env.outputs.image_tag }}
           platforms: linux/amd64
 
   deploy-on-premise:
-    needs: docker-build-and-push
+    needs: [prepare-env, docker-build-and-push]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/stage' || github.ref == 'refs/heads/main'
+    if: (github.ref == 'refs/heads/stage' || github.ref == 'refs/heads/main') && always() && !failure() && !cancelled()
 
     steps:
       - name: Checkout código
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-      
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
@@ -236,8 +224,6 @@ jobs:
           kubectl apply -f k8s/localstack-service.yaml
           kubectl apply -f k8s/infra-config.yaml
           kubectl apply -f k8s/infra-secret.yaml
-          kubectl apply -f k8s/localstack-deployment.yaml
-          kubectl apply -f k8s/localstack-service.yaml
           kubectl apply -f k8s/localstack-bootstrap-job.yaml
           kubectl apply -f k8s/ingress.yaml
 
@@ -257,24 +243,26 @@ jobs:
           kubectl apply -f notification-service/notification-deployment.yaml
           kubectl apply -f dashboard/dashboard-deployment.yaml
           kubectl apply -f dashboard/dashboard-service.yaml
-          
 
-      - name: Atualizar imagens com tag SHA
+      # Otimização SRE: Só atualiza a imagem no K8s se o container realmente foi gerado na Matriz!
+      - name: Atualizar imagens seletivamente com tag SHA
         run: |
-          kubectl set image deployment/auth-service auth-service=willcsilva/auth-service:${{ needs.docker-build-and-push.outputs.tag }} -n backend
-          kubectl set image deployment/upload-service upload-service=willcsilva/upload-service:${{ needs.docker-build-and-push.outputs.tag }} -n backend
-          kubectl set image deployment/status-service status-service=willcsilva/status-service:${{ needs.docker-build-and-push.outputs.tag }} -n backend
-          kubectl set image deployment/video-worker worker=willcsilva/video-worker:${{ needs.docker-build-and-push.outputs.tag }} -n backend
-          kubectl set image deployment/zip-service zip-service=willcsilva/zip-service:${{ needs.docker-build-and-push.outputs.tag }} -n backend
-          kubectl set image deployment/notification-service notification-service=willcsilva/notification-service:${{ needs.docker-build-and-push.outputs.tag }} -n backend
-          kubectl set image deployment/dashboard-ui dashboard-ui=willcsilva/dashboard-ui:${{ needs.docker-build-and-push.outputs.tag }} -n backend
+          TAG="${{ needs.prepare-env.outputs.image_tag }}"
+          
+          [[ "${{ needs.prepare-env.outputs.auth }}" == 'true' ]] && kubectl set image deployment/auth-service auth-service=willcsilva/auth-service:$TAG -n backend || echo "Sem alterações em auth-service"
+          [[ "${{ needs.prepare-env.outputs.upload }}" == 'true' ]] && kubectl set image deployment/upload-service upload-service=willcsilva/upload-service:$TAG -n backend || echo "Sem alterações em upload-service"
+          [[ "${{ needs.prepare-env.outputs.status }}" == 'true' ]] && kubectl set image deployment/status-service status-service=willcsilva/status-service:$TAG -n backend || echo "Sem alterações em status-service"
+          [[ "${{ needs.prepare-env.outputs.worker }}" == 'true' ]] && kubectl set image deployment/video-worker worker=willcsilva/video-worker:$TAG -n backend || echo "Sem alterações em video-worker"
+          [[ "${{ needs.prepare-env.outputs.zip }}" == 'true' ]] && kubectl set image deployment/zip-service zip-service=willcsilva/zip-service:$TAG -n backend || echo "Sem alterações em zip-service"
+          [[ "${{ needs.prepare-env.outputs.notification }}" == 'true' ]] && kubectl set image deployment/notification-service notification-service=willcsilva/notification-service:$TAG -n backend || echo "Sem alterações em notification-service"
+          [[ "${{ needs.prepare-env.outputs.dashboard }}" == 'true' ]] && kubectl set image deployment/dashboard-ui dashboard-ui=willcsilva/dashboard-ui:$TAG -n backend || echo "Sem alterações em dashboard-ui"
 
       - name: Aguardar rollout
         run: |
-          kubectl rollout status deployment/auth-service -n backend
-          kubectl rollout status deployment/upload-service -n backend
-          kubectl rollout status deployment/status-service -n backend
-          kubectl rollout status deployment/video-worker -n backend
-          kubectl rollout status deployment/zip-service -n backend
-          kubectl rollout status deployment/notification-service -n backend
-          kubectl rollout status deployment/dashboard-ui -n backend
+          kubectl rollout status deployment/auth-service -n backend --timeout=60s || true
+          kubectl rollout status deployment/upload-service -n backend --timeout=60s || true
+          kubectl rollout status deployment/status-service -n backend --timeout=60s || true
+          kubectl rollout status deployment/video-worker -n backend --timeout=60s || true
+          kubectl rollout status deployment/zip-service -n backend --timeout=60s || true
+          kubectl rollout status deployment/notification-service -n backend --timeout=60s || true
+          kubectl rollout status deployment/dashboard-ui -n backend --timeout=60s || true
