@@ -98,7 +98,7 @@ async function uploadVideo() {
     if (file.size > MAX_FILE_SIZE) {
 
       alert(
-        `${file.name} excede 10 MB`
+        `${file.name} excede 50 MB`
       );
 
       return;
