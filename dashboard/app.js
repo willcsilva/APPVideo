@@ -72,7 +72,7 @@ async function uploadVideo() {
   ];
 
   const MAX_FILE_SIZE =
-    10 * 1024 * 1024;
+    50 * 1024 * 1024;
 
   const formData = new FormData();
 
