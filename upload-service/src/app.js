@@ -1,6 +1,5 @@
 import express from "express";
 import multer from "multer";
-import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import { v4 as uuidv4 } from "uuid";
 import cors from "cors";
