@@ -99,3 +99,9 @@ spec:
 
             - name: LOCAL_FRAMES_DIR
               value: "/tmp/frames"
+              
+            - name: SQS_NOTIFICATION_QUEUE
+              value: notification
+
+            - name: SQS_NOTIFICATION_QUEUE_URL
+              value: http://localstack.infra.svc.cluster.local:4566/000000000000/notification

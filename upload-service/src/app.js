@@ -11,6 +11,11 @@ import { pool } from "./infra/db.js";
 import { config } from "./config.js";
 import { authMiddleware } from "./middleware/auth.js";
 
+import {
+  PutObjectCommand,
+  GetObjectCommand
+} from "@aws-sdk/client-s3";
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -197,3 +202,83 @@ app.get("/videos", authMiddleware, async (req, res) => {
     client.release();
   }
 });
+
+app.get(
+  "/videos/:videoId/download",
+  authMiddleware,
+  async (req, res) => {
+
+    const client = await pool.connect();
+
+    try {
+
+      const { videoId } = req.params;
+
+      const result = await client.query(
+        `
+        SELECT
+          file_name,
+          s3_path
+        FROM videos
+        WHERE id = $1
+        LIMIT 1
+        `,
+        [videoId]
+      );
+
+      if (result.rowCount === 0) {
+        return res
+          .status(404)
+          .json({
+            error: "Vídeo não encontrado"
+          });
+      }
+
+      const video = result.rows[0];
+
+      const key =
+        video.s3_path.replace(
+          `${config.rawBucket}/`,
+          ""
+        );
+
+      const response = await s3.send(
+        new GetObjectCommand({
+          Bucket: config.rawBucket,
+          Key: key
+        })
+      );
+
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${video.file_name}"`
+      );
+
+      res.setHeader(
+        "Content-Type",
+        response.ContentType ||
+        "application/octet-stream"
+      );
+
+      response.Body.pipe(res);
+
+    } catch (error) {
+
+      console.error(
+        "Erro download vídeo:",
+        error
+      );
+
+      return res
+        .status(500)
+        .json({
+          error: "Erro ao baixar vídeo"
+        });
+
+    } finally {
+
+      client.release();
+
+    }
+  }
+);

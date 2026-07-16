@@ -301,12 +301,20 @@ async function loadVideos() {
             ${
               video.zip_path
                 ? `
-                  ${video.zip_path}
+                  /${video.zip_path}
                     📦 Download ZIP
                   </a>
                 `
                 : "-"
             }
+          </td>
+
+          <td>
+            <button
+              onclick="downloadVideo('${video.video_id}')"
+            >
+              📹 Download Vídeo
+            </button>
           </td>
 
         </tr>
@@ -329,3 +337,62 @@ setInterval(
   loadVideos,
   10000
 );
+
+function downloadVideo(videoId) {
+
+  if (!token) {
+    return;
+  }
+
+  fetch(
+    `/videos/${videoId}/download`,
+    {
+      headers: {
+        Authorization:
+          `Bearer ${token}`
+      }
+    }
+  )
+  .then(response => {
+
+    if (!response.ok) {
+      throw new Error(
+        "Erro ao baixar vídeo"
+      );
+    }
+
+    return response.blob();
+
+  })
+  .then(blob => {
+
+    const url =
+      window.URL.createObjectURL(blob);
+
+    const a =
+      document.createElement("a");
+
+    a.href = url;
+
+    a.download = "";
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    a.remove();
+
+    window.URL
+      .revokeObjectURL(url);
+
+  })
+  .catch(error => {
+
+    console.error(error);
+
+    alert(
+      "Erro ao baixar vídeo"
+    );
+
+  });
+}
