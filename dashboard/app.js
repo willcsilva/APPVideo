@@ -51,10 +51,18 @@ async function uploadVideo() {
     return;
   }
 
-  const file = document.getElementById("videoFile").files;
+  const files =
+    document.getElementById("videoFile").files;
 
-  if (!file) {
-    alert("Selecione um vídeo.");
+  if (!files || files.length === 0) {
+    alert("Selecione pelo menos um vídeo.");
+    return;
+  }
+
+  if (files.length > 5) {
+    alert(
+      "É permitido enviar no máximo 5 vídeos."
+    );
     return;
   }
 
@@ -63,36 +71,45 @@ async function uploadVideo() {
     ".mov"
   ];
 
-  const fileName = file.name.toLowerCase();
-
-  const validExtension =
-    allowedExtensions.some(ext =>
-      fileName.endsWith(ext)
-    );
-
-  if (!validExtension) {
-    alert(
-      "Somente arquivos MP4 ou MOV são permitidos."
-    );
-    return;
-  }
-
   const MAX_FILE_SIZE =
     10 * 1024 * 1024;
 
-  if (file.size > MAX_FILE_SIZE) {
-    alert(
-      "Arquivo excede o limite máximo de 10 MB."
-    );
-    return;
-  }
-
   const formData = new FormData();
 
-  formData.append(
-    "file",
-    file
-  );
+  for (const file of files) {
+
+    const fileName =
+      file.name.toLowerCase();
+
+    const validExtension =
+      allowedExtensions.some(ext =>
+        fileName.endsWith(ext)
+      );
+
+    if (!validExtension) {
+
+      alert(
+        `${file.name} não é MP4 ou MOV`
+      );
+
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+
+      alert(
+        `${file.name} excede 10 MB`
+      );
+
+      return;
+    }
+
+    formData.append(
+      "files",
+      file
+    );
+
+  }
 
   try {
 
@@ -101,7 +118,8 @@ async function uploadVideo() {
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization:
+            `Bearer ${token}`
         },
         body: formData
       }
@@ -111,28 +129,21 @@ async function uploadVideo() {
       await response.json();
 
     if (!response.ok) {
+
       throw new Error(
         data.error ||
         data.message ||
         "Erro ao realizar upload"
       );
+
     }
 
     document.getElementById(
       "upload-result"
     ).innerHTML = `
       <p class="online">
-        ✅ Upload concluído
-      </p>
-
-      <p>
-        <strong>Job:</strong>
-        ${data.job_id}
-      </p>
-
-      <p>
-        <strong>Vídeo:</strong>
-        ${data.video_id}
+        ✅ ${data.total} vídeo(s)
+        enviado(s) com sucesso
       </p>
     `;
 
@@ -149,7 +160,9 @@ async function uploadVideo() {
         ❌ ${error.message}
       </p>
     `;
+
   }
+
 }
 
 async function loadStatus() {
