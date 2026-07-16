@@ -51,7 +51,7 @@ async function uploadVideo() {
     return;
   }
 
-  const file = document.getElementById("videoFile").files[0];
+  const file = document.getElementById("videoFile").files;
 
   if (!file) {
     alert("Selecione um vídeo.");

@@ -20,123 +20,244 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const upload = multer();
-
-app.post("/videos", authMiddleware, upload.single("file"), async (req, res) => {
-  const client = await pool.connect();
-
-  try {
-    const file = req.file;
-
-    if (!file) {
-      return res.status(400).json({ error: "Arquivo não enviado" });
-    }
-
-    const userId = req.user.sub;// temporário
-    const videoId = uuidv4();
-    const jobId = uuidv4();
-    const eventId = uuidv4();
-    const key = `${videoId}-${file.originalname}`;
-    const s3Path = `raw-videos/${key}`;
-
-    // 1. Upload no S3
-    await s3.send(
-      new PutObjectCommand({
-        Bucket: config.rawBucket,
-        Key: key,
-        Body: file.buffer,
-        ContentType: file.mimetype || "application/octet-stream",
-      })
-    );
-
-    // 2. Persistência no banco
-    await client.query("BEGIN");
-
-    await client.query(
-      `INSERT INTO videos (id, user_id, file_name, s3_path, status)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [videoId, userId, file.originalname, s3Path, "RECEIVED"]
-    );
-
-    await client.query(
-      `INSERT INTO jobs (id, video_id, type, status, attempts)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [jobId, videoId, "PROCESSING", "PENDING", 0]
-    );
-
-    const eventPayload = {
-      event_id: eventId,
-      event_type: "VIDEO_UPLOADED",
-      source: "upload-service",
-      payload: {
-        video_id: videoId,
-        user_id: userId,
-        user_email: req.user.email,
-        s3_path: s3Path,
-      },
-      created_at: new Date().toISOString(),
-    };
-
-    await client.query(
-      `INSERT INTO events (id, event_type, source, payload)
-       VALUES ($1, $2, $3, $4::jsonb)`,
-      [
-        eventId,
-        "VIDEO_UPLOADED",
-        "upload-service",
-        JSON.stringify(eventPayload.payload),
-      ]
-    );
-
-    await client.query("COMMIT");
-
-    // VIDEO_UPLOADED -> video-processing
-    await sqs.send(
-      new SendMessageCommand({
-        QueueUrl: config.queueUrl,
-        MessageBody: JSON.stringify(eventPayload),
-      })
-    );
-
-    // VIDEO_RECEIVED -> notification
-    await sqs.send(
-      new SendMessageCommand({
-        QueueUrl: config.notificationQueueUrl,
-
-        MessageBody: JSON.stringify({
-          event_type: "VIDEO_RECEIVED",
-
-          payload: {
-            video_id: videoId,
-            user_email: req.user.email
-          }
-        })
-      })
-    );
-
-    return res.status(201).json({
-      message: "Upload processado com sucesso",
-      video_id: videoId,
-      job_id: jobId,
-      file_key: key,
-      queue: config.queueName,
-    });
-  } catch (error) {
-    try {
-      await client.query("ROLLBACK");
-    } catch (rollbackError) {
-      console.error("Erro no rollback:", rollbackError);
-    }
-
-    console.error("Erro no upload-service:", error);
-    return res.status(500).json({
-      error: "Erro no processamento do upload",
-      details: error.message,
-    });
-  } finally {
-    client.release();
+const upload = multer({
+  limits: {
+    fileSize: 10 * 1024 * 1024
   }
 });
+
+
+app.post(
+  "/videos",
+  authMiddleware,
+  upload.array("files", 5),
+  async (req, res) => {
+
+    const client = await pool.connect();
+
+    try {
+
+      const files = req.files;
+
+      if (!files || files.length === 0) {
+        return res.status(400).json({
+          error: "Nenhum arquivo enviado"
+        });
+      }
+
+      const allowedMimeTypes = [
+        "video/mp4",
+        "video/quicktime"
+      ];
+
+      const userId = req.user.sub;
+
+      const uploadedVideos = [];
+
+      await client.query("BEGIN");
+
+      for (const file of files) {
+
+        if (
+          !allowedMimeTypes.includes(
+            file.mimetype
+          )
+        ) {
+
+          await client.query("ROLLBACK");
+
+          return res.status(400).json({
+            error:
+              `Arquivo ${file.originalname} não é MP4 ou MOV`
+          });
+
+        }
+
+        const videoId = uuidv4();
+        const jobId = uuidv4();
+        const eventId = uuidv4();
+
+        const key =
+          `${videoId}-${file.originalname}`;
+
+        const s3Path =
+          `raw-videos/${key}`;
+
+        // Upload S3
+        await s3.send(
+          new PutObjectCommand({
+            Bucket: config.rawBucket,
+            Key: key,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+          })
+        );
+
+        // Vídeo
+        await client.query(
+          `
+          INSERT INTO videos
+          (
+            id,
+            user_id,
+            file_name,
+            s3_path,
+            status
+          )
+          VALUES
+          ($1,$2,$3,$4,$5)
+          `,
+          [
+            videoId,
+            userId,
+            file.originalname,
+            s3Path,
+            "RECEIVED"
+          ]
+        );
+
+        // Job
+        await client.query(
+          `
+          INSERT INTO jobs
+          (
+            id,
+            video_id,
+            type,
+            status,
+            attempts
+          )
+          VALUES
+          ($1,$2,$3,$4,$5)
+          `,
+          [
+            jobId,
+            videoId,
+            "PROCESSING",
+            "PENDING",
+            0
+          ]
+        );
+
+        const eventPayload = {
+          event_id: eventId,
+          event_type: "VIDEO_UPLOADED",
+          source: "upload-service",
+          payload: {
+            video_id: videoId,
+            user_id: userId,
+            user_email: req.user.email,
+            s3_path: s3Path,
+          },
+          created_at:
+            new Date().toISOString(),
+        };
+
+        // Evento
+        await client.query(
+          `
+          INSERT INTO events
+          (
+            id,
+            event_type,
+            source,
+            payload
+          )
+          VALUES
+          ($1,$2,$3,$4::jsonb)
+          `,
+          [
+            eventId,
+            "VIDEO_UPLOADED",
+            "upload-service",
+            JSON.stringify(
+              eventPayload.payload
+            )
+          ]
+        );
+
+        // Fila processamento
+        await sqs.send(
+          new SendMessageCommand({
+            QueueUrl: config.queueUrl,
+            MessageBody:
+              JSON.stringify(eventPayload),
+          })
+        );
+
+        // Fila notificação
+        await sqs.send(
+          new SendMessageCommand({
+            QueueUrl:
+              config.notificationQueueUrl,
+
+            MessageBody:
+              JSON.stringify({
+                event_type:
+                  "VIDEO_RECEIVED",
+
+                payload: {
+                  video_id: videoId,
+                  user_email:
+                    req.user.email
+                }
+              })
+          })
+        );
+
+        uploadedVideos.push({
+          video_id: videoId,
+          job_id: jobId,
+          file_name:
+            file.originalname
+        });
+
+      }
+
+      await client.query("COMMIT");
+
+      return res.status(201).json({
+        message:
+          "Uploads processados com sucesso",
+
+        total:
+          uploadedVideos.length,
+
+        items:
+          uploadedVideos
+      });
+
+    } catch (error) {
+
+      try {
+        await client.query("ROLLBACK");
+      } catch (rollbackError) {
+        console.error(
+          "Erro rollback:",
+          rollbackError
+        );
+      }
+
+      console.error(
+        "Erro no upload-service:",
+        error
+      );
+
+      return res.status(500).json({
+        error:
+          "Erro no processamento do upload",
+        details:
+          error.message,
+      });
+
+    } finally {
+
+      client.release();
+
+    }
+
+  }
+);
 
 app.get("/health", async (req, res) => {
   try {
