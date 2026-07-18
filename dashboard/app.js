@@ -314,9 +314,11 @@ async function loadVideos() {
             ${
               video.zip_path
                 ? `
-                  /${video.zip_path}
+                  <button
+                    onclick="downloadZip('${video.video_id}')"
+                  >
                     📦 Download ZIP
-                  </a>
+                  </button>
                 `
                 : "-"
             }
@@ -408,4 +410,63 @@ function downloadVideo(videoId) {
     );
 
   });
+}
+
+function downloadZip(videoId) {
+
+  if (!token) {
+    return;
+  }
+
+  fetch(
+    `/videos/${videoId}/download-zip`,
+    {
+      headers: {
+        Authorization:
+          `Bearer ${token}`
+      }
+    }
+  )
+  .then(response => {
+
+    if (!response.ok) {
+      throw new Error(
+        "Erro ao baixar ZIP"
+      );
+    }
+
+    return response.blob();
+
+  })
+  .then(blob => {
+
+    const url =
+      window.URL.createObjectURL(blob);
+
+    const a =
+      document.createElement("a");
+
+    a.href = url;
+
+    a.download = "";
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    a.remove();
+
+    window.URL.revokeObjectURL(url);
+
+  })
+  .catch(error => {
+
+    console.error(error);
+
+    alert(
+      "Erro ao baixar ZIP"
+    );
+
+  });
+
 }

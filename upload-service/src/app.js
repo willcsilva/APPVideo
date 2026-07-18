@@ -403,3 +403,83 @@ app.get(
     }
   }
 );
+
+app.get(
+  "/videos/:videoId/download-zip",
+  authMiddleware,
+  async (req, res) => {
+
+    const client = await pool.connect();
+
+    try {
+
+      const { videoId } = req.params;
+
+      const result = await client.query(
+        `
+        SELECT
+          o.s3_path
+        FROM outputs o
+        WHERE o.video_id = $1
+          AND o.type = 'ZIP'
+        LIMIT 1
+        `,
+        [videoId]
+      );
+
+      if (result.rowCount === 0) {
+
+        return res.status(404).json({
+          error: "ZIP não encontrado"
+        });
+
+      }
+
+      const zipPath =
+        result.rows[0].s3_path;
+
+      const key =
+        zipPath.replace(
+          "zip-files/",
+          ""
+        );
+
+      const response =
+        await s3.send(
+          new GetObjectCommand({
+            Bucket: "zip-files",
+            Key: key
+          })
+        );
+
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${key}"`
+      );
+
+      res.setHeader(
+        "Content-Type",
+        "application/zip"
+      );
+
+      response.Body.pipe(res);
+
+    } catch (error) {
+
+      console.error(
+        "Erro download zip:",
+        error
+      );
+
+      return res.status(500).json({
+        error: "Erro ao baixar ZIP"
+      });
+
+    } finally {
+
+      client.release();
+
+    }
+
+  }
+);
