@@ -484,7 +484,11 @@ console.log("Fragmentos enviados para S3:", {
 });
 
   // 4. Upload dos frames para o bucket processado
-  const uploadedFrames = await uploadFramesToS3(video_id, mockFrames.frames);
+  const uploadedFragments =
+  await uploadFragmentsToS3(
+    video_id,
+    fragments.fragments
+  );
 
   console.log("Frames enviados para S3:", {
     video_id,
