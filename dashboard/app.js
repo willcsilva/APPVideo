@@ -54,21 +54,22 @@ async function login() {
   }
 }
 
-let token =
-  localStorage.getItem("jwt");
+window.onload = () => {
 
-if (token) {
+  if (token) {
 
-  document.getElementById("login-btn").style.display =
-    "none";
+    document.getElementById("login-btn").style.display =
+      "none";
 
-  document.getElementById("register-btn").style.display =
-    "none";
+    document.getElementById("register-btn").style.display =
+      "none";
 
-  document.getElementById("logout-btn").style.display =
-    "block";
+    document.getElementById("logout-btn").style.display =
+      "block";
 
-}
+  }
+
+};
 
 async function register() {
   try {
