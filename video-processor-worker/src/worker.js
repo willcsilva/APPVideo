@@ -16,6 +16,11 @@ import { s3 } from "./infra/s3.js";
 import { pool } from "./infra/db.js";
 import { config } from "./config.js";
 
+import { execFile } from "child_process";
+import { promisify } from "util";
+
+const execFileAsync = promisify(execFile);
+
 async function streamToBuffer(stream) {
   const chunks = [];
 
@@ -67,33 +72,78 @@ async function downloadVideoFromS3(s3Path, video_id) {
   };
 }
 
-async function createMockFrames(video_id) {
-  const frameDir = path.join(config.localFramesDir, video_id);
-  await fs.mkdir(frameDir, { recursive: true });
+async function createVideoFragments(
+  video_id,
+  videoPath
+) {
 
-  const frames = [];
+  const fragmentDir =
+    path.join(
+      config.localFramesDir,
+      video_id
+    );
 
-  for (let i = 1; i <= 3; i++) {
-    const fileName = `frame-00${i}.jpg`;
-    const localPath = path.join(frameDir, fileName);
+  await fs.mkdir(
+    fragmentDir,
+    { recursive: true }
+  );
 
-    const fakeImageContent = `fake-jpg-content video=${video_id} frame=${i}`;
-    await fs.writeFile(localPath, Buffer.from(fakeImageContent));
+  const outputPattern =
+    path.join(
+      fragmentDir,
+      "part-%03d.mp4"
+    );
 
-    frames.push({
-      fileName,
-      localPath,
-      contentType: "image/jpeg",
-    });
-  }
+  await execFileAsync(
+    "ffmpeg",
+    [
+      "-i",
+      videoPath,
+
+      "-c",
+      "copy",
+
+      "-f",
+      "segment",
+
+      "-segment_time",
+      "10",
+
+      "-reset_timestamps",
+      "1",
+
+      outputPattern
+    ]
+  );
+
+  const files =
+    await fs.readdir(fragmentDir);
+
+  const fragments =
+    files
+      .filter(file =>
+        file.endsWith(".mp4")
+      )
+      .sort()
+      .map(file => ({
+        fileName: file,
+        localPath:
+          path.join(
+            fragmentDir,
+            file
+          ),
+        contentType:
+          "video/mp4"
+      }));
 
   return {
-    frameDir,
-    frames,
+    fragmentDir,
+    fragments
   };
+
 }
 
-async function uploadFramesToS3(video_id, frames) {
+async function uploadFragmentsToS3(video_id, frames) {
   const uploaded = [];
 
   for (const frame of frames) {
@@ -413,11 +463,11 @@ async function processMessage(message) {
 
   // 5. Fecha etapa no banco + cria ZIP job + gera payload do evento
   const framesReadyEvent =
-    await finalizeFramesExtracted(
-      video_id,
-      uploadedFrames,
-      user_email
-    );
+  await finalizeFramesExtracted(
+    video_id,
+    uploadedFragments,
+    user_email
+  );
 
   console.log("Evento FRAMES_READY preparado:", framesReadyEvent);
 
