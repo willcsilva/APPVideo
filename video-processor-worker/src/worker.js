@@ -417,18 +417,7 @@ async function processMessage(message) {
     console.log("Mensagem sem body, ignorando...");
     return;
   }
-console.log(
-  "CHAMANDO finalizeFramesExtracted",
-  video_id,
-  new Date().toISOString()
-);
 
-const framesReadyEvent =
-  await finalizeFramesExtracted(
-    video_id,
-    uploadedFragments,
-    user_email
-  );
   const parsed = JSON.parse(message.Body);
 
   if (parsed.event_type !== "VIDEO_UPLOADED") {
