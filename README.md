@@ -110,12 +110,12 @@ Para demonstrar o scale-up seria necessário alterar artificialmente os requisit
 
 kubectl get hpa -n backend
 
-
-  **  NAME                  REFERENCE               TARGETS       MINPODS   MAXPODS   REPLICAS
-auth-service-hpa     Deployment/auth-service     cpu: 1%/70%      1         3         1       
-upload-service-hpa   Deployment/upload-service   cpu: 0%/70%      1         4         1       
-video-worker-hpa     Deployment/video-worker     cpu: 0%/70%      1         5         1        
-zip-service-hpa      Deployment/zip-service      cpu: 0%/70%      1         4         1   **      
+| NAME | REFERENCE | TARGETS | MINPODS | MAXPODS | REPLICAS |
+|------|-----------|---------|---------|---------|----------|
+| auth-service-hpa | Deployment/auth-service | cpu: 1%/70% | 1 | 3 | 1 |
+| upload-service-hpa | Deployment/upload-service | cpu: 0%/70% | 1 | 4 | 1 |
+| video-worker-hpa | Deployment/video-worker | cpu: 0%/70% | 1 | 5 | 1 |
+| zip-service-hpa | Deployment/zip-service | cpu: 0%/70% | 1 | 4 | 1 |
 
 ---
 
