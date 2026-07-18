@@ -76,6 +76,18 @@ Upload → Fila → Worker → Zip → Notificação → Status
 - Workers desacoplados via fila
 - Escala horizontal suportada
 
+Obs: "O projeto possui Horizontal Pod Autoscaler configurado e operacional. Entretanto, devido aos requisitos funcionais atuais — arquivos limitados a 50 MB e processamento extremamente rápido — a carga gerada não é suficiente para manter pressão de CPU, memória ou fila por tempo suficiente para disparar o scale-up durante a demonstração.
+Para demonstrar o scale-up seria necessário alterar artificialmente os requisitos operacionais, por exemplo aumentando significativamente o volume de uploads simultâneos, o tamanho dos vídeos, adicionando atraso proposital no processamento ou reduzindo temporariamente os thresholds do HPA. Como esses cenários não representam a carga real prevista para o sistema, optamos por manter a configuração de produção e demonstrar a capacidade através da configuração do Kubernetes."
+
+kubectl get hpa -n backend
+
+
+    NAME                  REFERENCE               TARGETS       MINPODS   MAXPODS   REPLICAS
+auth-service-hpa     Deployment/auth-service     cpu: 1%/70%      1         3         1       
+upload-service-hpa   Deployment/upload-service   cpu: 0%/70%      1         4         1       
+video-worker-hpa     Deployment/video-worker     cpu: 0%/70%      1         5         1        
+zip-service-hpa      Deployment/zip-service      cpu: 0%/70%      1         4         1         
+
 ---
 
 ## ♻️ Resiliência
@@ -102,7 +114,7 @@ Pipeline automatizado com:
 ## 🧪 Testes
 
 - Testes unitários
-- Testes de integração (PostgreSQL em container)
+- Testes de integração (PostgreSQL em container Ambiente de Teste "Stage")
 - Validação automática no pipeline
 
 ---
