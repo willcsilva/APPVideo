@@ -180,8 +180,10 @@ kubectl apply -f k8s/
 
 # 🧠 📊 DIAGRAMA DE ARQUITETURA
 
-Aqui está seu diagrama profissional:
+A seguir, está o desenho da arquitetura do sistema, com os principais componentes e o fluxo entre os serviços:
 
-![Arquitetura](blob:https://m365.cloud.microsoft/47a5c33a-8ec4-41e8-a41b-942595caf672)
+![Arquitetura do APPVideo](docs/architecture-diagram.svg)
+
+> Este diagrama representa a visão geral da solução em Kubernetes, incluindo entrada do usuário, camada de autenticação e upload, fila de processamento, workers, compactação, notificações e infraestrutura de persistência.
 
 ---
