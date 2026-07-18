@@ -14,9 +14,38 @@ O sistema foi projetado com foco em:
 
 ---
 
-## 🏗️ Arquitetura
+### 🏗️ Arquitetura
 
 O sistema segue um modelo **event-driven**, utilizando filas para desacoplamento entre serviços.
+
+# Requisitos Funcionais
+
+• A nova versão do sistema deve processar mais de um vídeo ao mesmo tempo.
+• Em caso de picos, o sistema não deve perder uma requisição.
+• O Sistema deve ser protegido por usuário e senha.
+• O fluxo deve ter uma listagem de status dos vídeos de um usuário.
+
+------
+
+# Requisitos Técnicos
+
+Arquitetura e Infraestrutura
+• O sistema deve persistir os dados.
+• O sistema deve estar em uma arquitetura que o permita ser escalado.
+• O projeto deve ser versionado no Github.
+• O projeto deve ter testes que garantam a sua qualidade.
+• CI/CD da aplicação.
+
+------
+# STACK TECNOLÓGICA
+
+• Containers
+• Mensageria
+• Banco de Dados
+• Monitoramento
+• CI/CD
+
+------
 
 ### Fluxo principal:
 Upload → Fila → Worker → Zip → Notificação → Status
