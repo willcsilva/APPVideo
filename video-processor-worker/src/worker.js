@@ -143,30 +143,45 @@ async function createVideoFragments(
 
 }
 
-async function uploadFragmentsToS3(video_id, frames) {
+async function uploadFragmentsToS3(
+  video_id,
+  fragments
+) {
+
   const uploaded = [];
 
-  for (const frame of frames) {
-    const body = await fs.readFile(frame.localPath);
-    const key = `${video_id}/${frame.fileName}`;
+  for (const fragment of fragments) {
+
+    const body =
+      await fs.readFile(
+        fragment.localPath
+      );
+
+    const key =
+      `${video_id}/${fragment.fileName}`;
 
     await s3.send(
       new PutObjectCommand({
         Bucket: config.processedBucket,
         Key: key,
         Body: body,
-        ContentType: frame.contentType,
+        ContentType:
+          fragment.contentType
       })
     );
 
     uploaded.push({
       key,
-      s3Path: `${config.processedBucket}/${key}`,
-      localPath: frame.localPath,
+      s3Path:
+        `${config.processedBucket}/${key}`,
+      localPath:
+        fragment.localPath,
     });
+
   }
 
   return uploaded;
+
 }
 
 async function registerEvent(eventType, source, payload) {
@@ -446,11 +461,27 @@ async function processMessage(message) {
     downloadResult.outputPath
   );
 
-  console.log("Frames mock criados:", {
+ console.log("Fragmentos criados:", {
+  video_id,
+  fragmentDir: fragments.fragmentDir,
+  fragments: fragments.fragments.map(
+    (f) => f.fileName
+  ),
+});
+
+const uploadedFragments =
+  await uploadFragmentsToS3(
     video_id,
-    frameDir: mockFrames.frameDir,
-    frames: mockFrames.frames.map((f) => f.fileName),
-  });
+    fragments.fragments
+  );
+
+console.log("Fragmentos enviados para S3:", {
+  video_id,
+  count: uploadedFragments.length,
+  files: uploadedFragments.map(
+    (f) => f.s3Path
+  ),
+});
 
   // 4. Upload dos frames para o bucket processado
   const uploadedFrames = await uploadFramesToS3(video_id, mockFrames.frames);
@@ -464,10 +495,10 @@ async function processMessage(message) {
   // 5. Fecha etapa no banco + cria ZIP job + gera payload do evento
   const framesReadyEvent =
   await finalizeFramesExtracted(
-    video_id,
-    uploadedFragments,
-    user_email
-  );
+  video_id,
+  uploadedFragments,
+  user_email
+);
 
   console.log("Evento FRAMES_READY preparado:", framesReadyEvent);
 
