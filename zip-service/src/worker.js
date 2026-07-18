@@ -78,10 +78,22 @@ async function downloadFrames(videoId, files) {
   };
 }
 
-async function createZip(videoId, inputFiles) {
+async function createZip(
+  videoId,
+  inputFiles,
+  originalFileName
+)
+{
   await fs.mkdir(config.localZipDir, { recursive: true });
 
-  const zipFileName = `${videoId}.zip`;
+  const baseName =
+  originalFileName
+    ? originalFileName.replace(/\.[^/.]+$/, "")
+    : videoId;
+
+const zipFileName =
+  `${baseName}-fragments.zip`;
+
   const zipPath = path.join(config.localZipDir, zipFileName);
 
   return new Promise((resolve, reject) => {
@@ -214,10 +226,11 @@ async function processMessage(message) {
   }
 
   const {
-    video_id,
-    files,
-    user_email
-  } = parsed.payload || {};
+  video_id,
+  files,
+  user_email,
+  original_file_name
+} = parsed.payload || {};
   
   console.log("Payload recebido:", parsed.payload);
 
@@ -240,7 +253,11 @@ async function processMessage(message) {
   });
 
   // 2. Gera o zip
-  const zipResult = await createZip(videoId, frames.downloadedFiles);
+  const zipResult = await createZip(
+  videoId,
+  frames.downloadedFiles,
+  original_file_name
+);
 
   console.log("ZIP gerado localmente:", zipResult);
 

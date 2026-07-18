@@ -201,6 +201,11 @@ async function registerEvent(eventType, source, payload) {
 }
 
 async function markProcessingStarted(video_id) {
+  console.log(
+  "STATUS ALTERADO PARA PROCESSING",
+  video_id,
+  new Date().toISOString()
+);
   const client = await pool.connect();
 
   try {
@@ -250,6 +255,12 @@ async function markProcessingStarted(video_id) {
   }
 }
 
+console.log(
+  "CHAMANDO finalizeFramesExtracted",
+  video_id,
+  new Date().toISOString()
+);
+
 async function finalizeFramesExtracted(
     video_id,
     uploadedFrames,
@@ -262,6 +273,19 @@ async function finalizeFramesExtracted(
     const zipJobId = uuidv4();
     const eventId = uuidv4();
 
+    const videoResult = await client.query(
+        `
+        SELECT file_name
+        FROM videos
+        WHERE id = $1
+        LIMIT 1
+        `,
+        [video_id]
+      );
+
+const originalFileName =
+  videoResult.rows[0]?.file_name;
+
     const eventPayload = {
       event_id: eventId,
       event_type: "FRAMES_READY",
@@ -269,6 +293,7 @@ async function finalizeFramesExtracted(
       payload: {
         video_id: video_id,
         user_email: userEmail,
+        original_file_name: originalFileName,
         images_path: imagesPath,
         frames_count: uploadedFrames.length,
         files: uploadedFrames.map((f) => f.s3Path),
@@ -408,9 +433,10 @@ async function processMessage(message) {
 
   const {
   video_id,
-  s3_path,
-  user_email
-  } = parsed.payload || {};
+  files,
+  user_email,
+  original_file_name
+} = parsed.payload || {};
 
   if (!video_id || !s3_path) {
     throw new Error("Payload inválido: video_id ou s3_path ausente");
@@ -426,8 +452,11 @@ async function processMessage(message) {
   console.log("Origem no S3:", s3_path);
 
   // 1. Marca vídeo como PROCESSING
-  // 1. Marca vídeo como PROCESSING
   await markProcessingStarted(video_id);
+
+  await new Promise(resolve =>
+  setTimeout(resolve, 15000)
+);
 
   // Notifica usuário
   if (user_email) {
@@ -469,20 +498,6 @@ async function processMessage(message) {
   ),
 });
 
-const uploadedFragments =
-  await uploadFragmentsToS3(
-    video_id,
-    fragments.fragments
-  );
-
-console.log("Fragmentos enviados para S3:", {
-  video_id,
-  count: uploadedFragments.length,
-  files: uploadedFragments.map(
-    (f) => f.s3Path
-  ),
-});
-
   // 4. Upload dos frames para o bucket processado
   const uploadedFragments =
   await uploadFragmentsToS3(
@@ -490,13 +505,12 @@ console.log("Fragmentos enviados para S3:", {
     fragments.fragments
   );
 
-  console.log("Frames enviados para S3:", {
-    video_id,
-    count: uploadedFrames.length,
-    files: uploadedFrames.map((f) => f.s3Path),
-  });
-
   // 5. Fecha etapa no banco + cria ZIP job + gera payload do evento
+
+  await new Promise(resolve =>
+  setTimeout(resolve, 15000)
+);
+
   const framesReadyEvent =
   await finalizeFramesExtracted(
   video_id,

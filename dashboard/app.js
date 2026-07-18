@@ -345,12 +345,12 @@ loadStatus();
 
 setInterval(
   loadStatus,
-  10000
+  1000
 );
 
 setInterval(
   loadVideos,
-  10000
+  1000
 );
 
 function downloadVideo(videoId) {
@@ -368,18 +368,48 @@ function downloadVideo(videoId) {
       }
     }
   )
-  .then(response => {
+  .then(async response => {
 
-    if (!response.ok) {
-      throw new Error(
-        "Erro ao baixar vídeo"
+  if (!response.ok) {
+    throw new Error(
+      "Erro ao baixar vídeo"
+    );
+  }
+
+  const contentDisposition =
+    response.headers.get(
+      "content-disposition"
+    );
+
+  let fileName =
+    `video-${videoId}.mov`;
+
+  if (contentDisposition) {
+
+    const match =
+      contentDisposition.match(
+        /filename="(.+)"/
       );
+
+    if (
+      match &&
+      match[1]
+    ) {
+      fileName = match[1];
     }
 
-    return response.blob();
+  }
 
-  })
-  .then(blob => {
+  const blob =
+    await response.blob();
+
+  return {
+    blob,
+    fileName
+  };
+
+})
+.then(({ blob, fileName }) => {
 
     const url =
       window.URL.createObjectURL(blob);
@@ -389,7 +419,8 @@ function downloadVideo(videoId) {
 
     a.href = url;
 
-    a.download = "";
+    console.log("Video filename:", fileName);
+    a.download = fileName;
 
     document.body.appendChild(a);
 
@@ -427,38 +458,70 @@ function downloadZip(videoId) {
       }
     }
   )
-  .then(response => {
+  .then(async response => {
 
-    if (!response.ok) {
-      throw new Error(
-        "Erro ao baixar ZIP"
+  if (!response.ok) {
+    throw new Error(
+      "Erro ao baixar ZIP"
+    );
+  }
+
+  const contentDisposition =
+    response.headers.get(
+      "content-disposition"
+    );
+
+  let fileName =
+    `video-${videoId}-fragments.zip`;
+
+  if (contentDisposition) {
+
+    const match =
+      contentDisposition.match(
+        /filename="(.+)"/
       );
+
+    if (
+      match &&
+      match[1]
+    ) {
+      fileName = match[1];
     }
 
-    return response.blob();
+  }
 
-  })
-  .then(blob => {
+  const blob =
+    await response.blob();
 
-    const url =
-      window.URL.createObjectURL(blob);
+  return {
+    blob,
+    fileName
+  };
 
-    const a =
-      document.createElement("a");
+})
+.then(({ blob, fileName }) => {
 
-    a.href = url;
+  const url =
+    window.URL.createObjectURL(blob);
 
-    a.download = "";
+  const a =
+    document.createElement("a");
 
-    document.body.appendChild(a);
+  a.href = url;
 
-    a.click();
+  console.log(fileName);
 
-    a.remove();
+  a.download = fileName;
 
-    window.URL.revokeObjectURL(url);
+  document.body.appendChild(a);
 
-  })
+  a.click();
+
+  a.remove();
+
+  window.URL.revokeObjectURL(url);
+
+})
   .catch(error => {
 
     console.error(error);

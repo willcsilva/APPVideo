@@ -418,14 +418,18 @@ app.get(
       const result = await client.query(
         `
         SELECT
-          o.s3_path
+          o.s3_path,
+          v.file_name
         FROM outputs o
+        INNER JOIN videos v
+          ON v.id = o.video_id
         WHERE o.video_id = $1
           AND o.type = 'ZIP'
         LIMIT 1
         `,
         [videoId]
       );
+
 
       if (result.rowCount === 0) {
 
@@ -435,34 +439,49 @@ app.get(
 
       }
 
-      const zipPath =
-        result.rows[0].s3_path;
+const zipPath =
+  result.rows[0].s3_path;
 
-      const key =
-        zipPath.replace(
-          "zip-files/",
-          ""
-        );
+const fileName =
+  result.rows[0].file_name ||
+  `video-${videoId}`;
 
-      const response =
-        await s3.send(
-          new GetObjectCommand({
-            Bucket: "zip-files",
-            Key: key
-          })
-        );
+const key =
+  zipPath.replace(
+    "zip-files/",
+    ""
+  );
 
-      res.setHeader(
-        "Content-Disposition",
-        `attachment; filename="${key}"`
-      );
+const response =
+  await s3.send(
+    new GetObjectCommand({
+      Bucket: "zip-files",
+      Key: key
+    })
+  );
 
-      res.setHeader(
-        "Content-Type",
-        "application/zip"
-      );
+const baseName =
+  fileName.replace(
+    /\.[^/.]+$/,
+    ""
+  );
 
-      response.Body.pipe(res);
+console.log({
+  fileName,
+  baseName
+});
+
+res.setHeader(
+  "Content-Disposition",
+  `attachment; filename="${baseName}-fragments.zip"`
+);
+
+res.setHeader(
+  "Content-Type",
+  "application/zip"
+);
+
+response.Body.pipe(res);
 
     } catch (error) {
 
