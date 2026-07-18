@@ -427,9 +427,8 @@ async function processMessage(message) {
 
   const {
   video_id,
-  files,
-  user_email,
-  original_file_name
+  s3_path,
+  user_email
 } = parsed.payload || {};
 
   if (!video_id || !s3_path) {
