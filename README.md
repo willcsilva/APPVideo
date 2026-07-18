@@ -180,7 +180,7 @@ kubectl apply -f k8s/
 
 # 🧠 📊 DIAGRAMA DE ARQUITETURA
 
-A seguir, está o desenho da arquitetura do sistema, com os principais componentes e o fluxo entre os serviços:
+A seguir, está o desenho da arquitetura do sistema, com os principais componentes e o fluxo entre os serviços no ambiente de Desenvolvimento "STAGE"
 
 ```mermaid
 graph LR
