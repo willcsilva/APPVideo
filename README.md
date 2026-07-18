@@ -182,7 +182,40 @@ kubectl apply -f k8s/
 
 A seguir, está o desenho da arquitetura do sistema, com os principais componentes e o fluxo entre os serviços:
 
-![Arquitetura do APPVideo](docs/architecture-diagram.svg)
+```mermaid
+graph LR
+    A["👤 Usuário<br/>Cliente Web/API"] -->|autenticação| B["🔐 Auth Service<br/>Node.js + JWT"]
+    A -->|upload| C["📤 Upload Service<br/>Recebe Vídeos"]
+    A -->|consulta| D["📊 Status Service<br/>Health Check"]
+    
+    C -->|armazena| H["☁️ S3<br/>LocalStack"]
+    C -->|envia job| E["📬 SQS Queue<br/>Mensageria Assíncrona"]
+    
+    E -->|processa| F["🎬 Video Worker<br/>FFmpeg - Frames"]
+    F -->|salva| H
+    
+    F -->|dados| I["🗄️ PostgreSQL<br/>Persistência"]
+    
+    F -->|compacta| G["🗜️ Zip Service<br/>Compactação"]
+    G -->|salva| H
+    
+    G -->|notifica| J["📧 Notification<br/>E-mail / Alertas"]
+    
+    H -->|cache| K["⚡ Redis<br/>Cache Distribuído"]
+    I -->|consulta| D
+    
+    style A fill:#e8f1ff,stroke:#4f7cff,stroke-width:2px,color:#000
+    style B fill:#eef8f1,stroke:#2fa84f,stroke-width:2px,color:#000
+    style C fill:#eef8f1,stroke:#2fa84f,stroke-width:2px,color:#000
+    style D fill:#eef8f1,stroke:#2fa84f,stroke-width:2px,color:#000
+    style E fill:#fff7e6,stroke:#f2a93b,stroke-width:2px,color:#000
+    style F fill:#f2f0ff,stroke:#7b61ff,stroke-width:2px,color:#000
+    style G fill:#f2f0ff,stroke:#7b61ff,stroke-width:2px,color:#000
+    style H fill:#f8f9fb,stroke:#9aa8bf,stroke-width:2px,color:#000
+    style I fill:#f8f9fb,stroke:#9aa8bf,stroke-width:2px,color:#000
+    style J fill:#fff0f2,stroke:#e34f6c,stroke-width:2px,color:#000
+    style K fill:#f8f9fb,stroke:#9aa8bf,stroke-width:2px,color:#000
+```
 
 > Este diagrama representa a visão geral da solução em Kubernetes, incluindo entrada do usuário, camada de autenticação e upload, fila de processamento, workers, compactação, notificações e infraestrutura de persistência.
 
