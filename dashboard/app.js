@@ -44,6 +44,56 @@ async function login() {
   }
 }
 
+async function register() {
+  try {
+
+    const email =
+      document.getElementById("email").value;
+
+    const password =
+      document.getElementById("password").value;
+
+    const response = await fetch(
+      `${AUTH_URL}/register`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json"
+        },
+        body: JSON.stringify({
+          email,
+          password
+        })
+      }
+    );
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        "Erro ao cadastrar usuário"
+      );
+    }
+
+    alert(
+      "Usuário criado com sucesso!"
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      error.message ||
+      "Erro ao cadastrar usuário"
+    );
+
+  }
+}
+
 async function uploadVideo() {
 
   if (!token) {

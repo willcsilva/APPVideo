@@ -11,6 +11,8 @@ import { pool } from "./infra/db.js";
 import { config } from "./config.js";
 import { authMiddleware } from "./middleware/auth.js";
 
+import crypto from "crypto";
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -147,6 +149,87 @@ app.post("/auth/register", async (req, res) => {
  *       401:
  *         description: Credenciais inválidas
  */
+
+app.post("/auth/register", async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        error: "email e password são obrigatórios",
+      });
+    }
+
+    const existingUser = await client.query(
+      `
+      SELECT id
+      FROM users
+      WHERE email = $1
+      LIMIT 1
+      `,
+      [email]
+    );
+
+    if (existingUser.rowCount > 0) {
+      return res.status(409).json({
+        error: "Usuário já cadastrado",
+      });
+    }
+
+    const passwordHash =
+      await bcrypt.hash(password, 10);
+
+    const userId = crypto.randomUUID();
+
+    await client.query(
+      `
+      INSERT INTO users (
+        id,
+        email,
+        password_hash
+      )
+      VALUES (
+        $1::uuid,
+        $2,
+        $3
+      )
+      `,
+      [
+        userId,
+        email,
+        passwordHash
+      ]
+    );
+
+    return res.status(201).json({
+      message: "Usuário criado com sucesso",
+      user: {
+        id: userId,
+        email
+      }
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Erro no /register:",
+      error
+    );
+
+    return res.status(500).json({
+      error: "Erro ao cadastrar usuário",
+      details: error.message
+    });
+
+  } finally {
+    client.release();
+  }
+});
+
+
+
 app.post("/auth/login", async (req, res) => {
   const client = await pool.connect();
 
