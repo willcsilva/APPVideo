@@ -389,8 +389,12 @@ async function processMessage(message) {
     file_size: downloadResult.fileSize,
   });
 
-  // 3. Geração fake de frames
-  const mockFrames = await createMockFrames(video_id);
+  // 3. Geração de frames
+  const fragments =
+  await createVideoFragments(
+    video_id,
+    downloadResult.outputPath
+  );
 
   console.log("Frames mock criados:", {
     video_id,
