@@ -30,7 +30,17 @@ async function login() {
       document.getElementById("login-status").innerHTML =
         "<p class='online'>✅ Login realizado com sucesso</p>";
 
+      document.getElementById("login-btn").style.display =
+        "none";
+
+      document.getElementById("register-btn").style.display =
+        "none";
+
+      document.getElementById("logout-btn").style.display =
+        "block";
+
       loadVideos();
+
     } else {
       document.getElementById("login-status").innerHTML =
         `<p class="error">❌ ${data.error || "Login inválido"}</p>`;
@@ -42,6 +52,22 @@ async function login() {
     document.getElementById("login-status").innerHTML =
       "<p class='error'>❌ Erro ao conectar com Auth Service</p>";
   }
+}
+
+let token =
+  localStorage.getItem("jwt");
+
+if (token) {
+
+  document.getElementById("login-btn").style.display =
+    "none";
+
+  document.getElementById("register-btn").style.display =
+    "none";
+
+  document.getElementById("logout-btn").style.display =
+    "block";
+
 }
 
 async function register() {
@@ -92,6 +118,16 @@ async function register() {
     );
 
   }
+}
+
+function logout() {
+
+  localStorage.removeItem("jwt");
+
+  token = null;
+
+  location.reload();
+
 }
 
 async function uploadVideo() {

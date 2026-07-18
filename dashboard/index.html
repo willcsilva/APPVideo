@@ -32,15 +32,27 @@
         id="password"
         placeholder="Senha">
 
-      <button onclick="login()">
+      <button
+        id="login-btn"
+        onclick="login()"
+      >
         Entrar
       </button>
 
       <button
+        id="register-btn"
         onclick="register()"
         class="register-btn"
       >
         Criar Conta
+      </button>
+
+      <button
+        id="logout-btn"
+        onclick="logout()"
+        style="display:none;"
+      >
+        Sair
       </button>
 
       <div id="login-status"></div>
