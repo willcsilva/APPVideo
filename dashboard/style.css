@@ -228,3 +228,12 @@ tr:hover {
 .download-btn:hover {
   background: #0284c7;
 }
+
+.register-btn {
+  margin-top: 12px;
+  background: #22c55e;
+}
+
+.register-btn:hover {
+  background: #16a34a;
+}
