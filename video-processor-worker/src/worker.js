@@ -1,12 +1,18 @@
+if (process.env.NODE_ENV !== "test") {
+  await import("newrelic");
+}
+
 import {
   ReceiveMessageCommand,
   DeleteMessageCommand,
   SendMessageCommand,
 } from "@aws-sdk/client-sqs";
+
 import {
   GetObjectCommand,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
+
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
 import path from "path";
@@ -18,10 +24,6 @@ import { config } from "./config.js";
 
 import { execFile } from "child_process";
 import { promisify } from "util";
-
-if (process.env.NODE_ENV !== "test") {
-  await import("newrelic");
-}
 
 
 const execFileAsync = promisify(execFile);
