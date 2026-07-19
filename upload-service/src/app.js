@@ -143,6 +143,11 @@ app.post(
           ]
         );
 
+      console.log("USUARIO AUTENTICADO:", {
+        id: req.user.id,
+        email: req.user.email
+      });
+
         const eventPayload = {
           event_id: eventId,
           event_type: "VIDEO_UPLOADED",
