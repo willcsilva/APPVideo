@@ -1,6 +1,4 @@
-if (process.env.NODE_ENV !== "test") {
-  await import("newrelic");
-}
+import newrelic from "newrelic";
 
 import {
   ReceiveMessageCommand,
@@ -420,115 +418,153 @@ async function publishProcessingNotification(
 }
 
 async function processMessage(message) {
-  if (!message.Body) {
-    console.log("Mensagem sem body, ignorando...");
-    return;
-  }
+  return newrelic.startBackgroundTransaction(
+    "process-video",
+    async () => {
+      const transaction = newrelic.getTransaction();
 
-  const parsed = JSON.parse(message.Body);
+      try {
+        if (!message.Body) {
+          console.log("Mensagem sem body, ignorando...");
+          return;
+        }
 
-  if (parsed.event_type !== "VIDEO_UPLOADED") {
-    console.log("Evento ignorado:", parsed.event_type);
-    return;
-  }
+        const parsed = JSON.parse(message.Body);
 
-  const {
-  video_id,
-  s3_path,
-  user_email
-} = parsed.payload || {};
+        if (parsed.event_type !== "VIDEO_UPLOADED") {
+          console.log("Evento ignorado:", parsed.event_type);
+          return;
+        }
 
-  if (!video_id || !s3_path) {
-    throw new Error("Payload inválido: video_id ou s3_path ausente");
-  }
+        const {
+          video_id,
+          s3_path,
+          user_email
+        } = parsed.payload || {};
 
-  console.log(JSON.stringify({
-  level: "info",
-  service: "video-worker",
-  message: "Processando vídeo",
-  video_id,
-  timestamp: new Date().toISOString()
-}));
-  console.log("Origem no S3:", s3_path);
+        if (!video_id || !s3_path) {
+          throw new Error(
+            "Payload inválido: video_id ou s3_path ausente"
+          );
+        }
 
-  // 1. Marca vídeo como PROCESSING
-  await markProcessingStarted(video_id);
+        console.log(JSON.stringify({
+          level: "info",
+          service: "video-worker",
+          message: "Processando vídeo",
+          video_id,
+          timestamp: new Date().toISOString()
+        }));
 
-  await new Promise(resolve =>
-  setTimeout(resolve, 15000)
-);
+        console.log("Origem no S3:", s3_path);
 
-  // Notifica usuário
-  if (user_email) {
-    await publishProcessingNotification(
-      video_id,
-      user_email
-    );
-  }
+        // 1. Marca vídeo como PROCESSING
+        await markProcessingStarted(video_id);
 
-  // 2. Download do vídeo
-  const downloadResult = await downloadVideoFromS3(s3_path, video_id);
+        await new Promise(resolve =>
+          setTimeout(resolve, 15000)
+        );
 
-  console.log("Download concluído:", {
-    video_id,
-    key: downloadResult.key,
-    outputPath: downloadResult.outputPath,
-    fileSize: downloadResult.fileSize,
-  });
+        // Notifica usuário
+        if (user_email) {
+          await publishProcessingNotification(
+            video_id,
+            user_email
+          );
+        }
 
-  await registerEvent("VIDEO_DOWNLOADED", "video-processor-worker", {
-    video_id,
-    s3_path,
-    local_path: downloadResult.outputPath,
-    file_size: downloadResult.fileSize,
-  });
+        // 2. Download do vídeo
+        const downloadResult =
+          await downloadVideoFromS3(
+            s3_path,
+            video_id
+          );
 
-  // 3. Geração de frames
-  const fragments =
-  await createVideoFragments(
-    video_id,
-    downloadResult.outputPath
+        console.log("Download concluído:", {
+          video_id,
+          key: downloadResult.key,
+          outputPath: downloadResult.outputPath,
+          fileSize: downloadResult.fileSize,
+        });
+
+        await registerEvent(
+          "VIDEO_DOWNLOADED",
+          "video-processor-worker",
+          {
+            video_id,
+            s3_path,
+            local_path: downloadResult.outputPath,
+            file_size: downloadResult.fileSize,
+          }
+        );
+
+        // 3. Geração de frames
+        const fragments =
+          await createVideoFragments(
+            video_id,
+            downloadResult.outputPath
+          );
+
+        console.log("Fragmentos criados:", {
+          video_id,
+          fragmentDir: fragments.fragmentDir,
+          fragments: fragments.fragments.map(
+            (f) => f.fileName
+          ),
+        });
+
+        // 4. Upload dos frames
+        const uploadedFragments =
+          await uploadFragmentsToS3(
+            video_id,
+            fragments.fragments
+          );
+
+        await new Promise(resolve =>
+          setTimeout(resolve, 15000)
+        );
+
+        // 5. Finalização
+        const framesReadyEvent =
+          await finalizeFramesExtracted(
+            video_id,
+            uploadedFragments,
+            user_email
+          );
+
+        console.log(
+          "Evento FRAMES_READY preparado:",
+          framesReadyEvent
+        );
+
+        // 6. Publica na fila ZIP
+        await publishFramesReady(framesReadyEvent);
+
+        console.log(
+          "Evento publicado na fila zip-generation:",
+          {
+            video_id,
+            queue: config.zipQueueName,
+          }
+        );
+
+        console.log(
+          "Vídeo finalizado nesta etapa como FRAMES_EXTRACTED:",
+          video_id
+        );
+
+      } catch (error) {
+
+        newrelic.noticeError(error);
+        throw error;
+
+      } finally {
+
+        transaction.end();
+
+      }
+    }
   );
-
- console.log("Fragmentos criados:", {
-  video_id,
-  fragmentDir: fragments.fragmentDir,
-  fragments: fragments.fragments.map(
-    (f) => f.fileName
-  ),
-});
-
-  // 4. Upload dos frames para o bucket processado
-  const uploadedFragments =
-  await uploadFragmentsToS3(
-    video_id,
-    fragments.fragments
-  );
-
-  // 5. Fecha etapa no banco + cria ZIP job + gera payload do evento
-
-  await new Promise(resolve =>
-  setTimeout(resolve, 15000)
-);
-
-  const framesReadyEvent =
-  await finalizeFramesExtracted(
-  video_id,
-  uploadedFragments,
-  user_email
-);
-
-  console.log("Evento FRAMES_READY preparado:", framesReadyEvent);
-
-  // 6. Publica na fila do ZIP
-  await publishFramesReady(framesReadyEvent);
-
-  console.log("Evento publicado na fila zip-generation:", {
-    video_id,
-    queue: config.zipQueueName,
-  });
-
-  console.log("Vídeo finalizado nesta etapa como FRAMES_EXTRACTED:", video_id);
 }
 
 async function pollQueue() {
