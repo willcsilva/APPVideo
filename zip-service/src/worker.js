@@ -1,3 +1,4 @@
+import newrelic from "newrelic";
 import {
   ReceiveMessageCommand,
   DeleteMessageCommand,
@@ -18,9 +19,6 @@ import { s3 } from "./infra/s3.js";
 import { pool } from "./infra/db.js";
 import { config } from "./config.js";
 
-if (process.env.NODE_ENV !== "test") {
-  await import("newrelic");
-}
 
 async function streamToBuffer(stream) {
   const chunks = [];
@@ -217,98 +215,139 @@ async function finalizeZipCompleted(videoId, zipS3Path) {
 }
 
 async function processMessage(message) {
-  if (!message.Body) {
-    console.log("Mensagem sem Body, ignorando...");
-    return;
-  }
+  return newrelic.startBackgroundTransaction(
+    "generate-zip",
+    async () => {
 
-  const parsed = JSON.parse(message.Body);
+      const transaction = newrelic.getTransaction();
 
-  if (parsed.event_type !== "FRAMES_READY") {
-    console.log("Evento ignorado:", parsed.event_type);
-    return;
-  }
+      try {
 
-  const {
-  video_id,
-  files,
-  user_email,
-  original_file_name
-} = parsed.payload || {};
-  
-  console.log("Payload recebido:", parsed.payload);
+        if (!message.Body) {
+          console.log("Mensagem sem Body, ignorando...");
+          return;
+        }
 
-  if (!video_id || !Array.isArray(files) || files.length === 0) {
-    throw new Error("Payload inválido: video_id/files ausentes");
-  }
+        const parsed = JSON.parse(message.Body);
 
-  const videoId = video_id;
+        if (parsed.event_type !== "FRAMES_READY") {
+          console.log("Evento ignorado:", parsed.event_type);
+          return;
+        }
 
-  console.log("Processando ZIP para vídeo:", videoId);
-  console.log("Quantidade de frames recebidos:", files.length);
+        const {
+          video_id,
+          files,
+          user_email,
+          original_file_name
+        } = parsed.payload || {};
 
-  // 1. Baixa os frames
-  const frames = await downloadFrames(videoId, files);
+        console.log("Payload recebido:", parsed.payload);
 
-  console.log("Frames baixados localmente:", {
-    video_id: videoId,
-    targetDir: frames.targetDir,
-    files: frames.downloadedFiles.map((f) => f.fileName),
-  });
+        if (!video_id || !Array.isArray(files) || files.length === 0) {
+          throw new Error(
+            "Payload inválido: video_id/files ausentes"
+          );
+        }
 
-  // 2. Gera o zip
-  const zipResult = await createZip(
-  videoId,
-  frames.downloadedFiles,
-  original_file_name
-);
+        const videoId = video_id;
 
-  console.log("ZIP gerado localmente:", zipResult);
+        console.log("Processando ZIP para vídeo:", videoId);
+        console.log(
+          "Quantidade de frames recebidos:",
+          files.length
+        );
 
-  // 3. Envia o zip para o S3
-  const uploadedZip = await uploadZipToS3(videoId, zipResult.zipPath);
+        // 1. Baixa os frames
+        const frames = await downloadFrames(
+          videoId,
+          files
+        );
 
-  console.log("ZIP enviado para S3:", uploadedZip);
+        console.log("Frames baixados localmente:", {
+          video_id: videoId,
+          targetDir: frames.targetDir,
+          files: frames.downloadedFiles.map(
+            (f) => f.fileName
+          ),
+        });
 
-// 4. Atualiza banco e eventos
-  await finalizeZipCompleted(
-    videoId,
-    uploadedZip.s3Path
-  );
+        // 2. Gera o ZIP
+        const zipResult = await createZip(
+          videoId,
+          frames.downloadedFiles,
+          original_file_name
+        );
 
-  // 5. Publica evento para notification-service
-  if (user_email) {
+        console.log("ZIP gerado localmente:", zipResult);
 
-    await sqs.send(
-      new SendMessageCommand({
-        QueueUrl: config.notificationQueueUrl,
+        // 3. Upload para S3
+        const uploadedZip =
+          await uploadZipToS3(
+            videoId,
+            zipResult.zipPath
+          );
 
-        MessageBody: JSON.stringify({
-          event_type: "VIDEO_COMPLETED",
+        console.log(
+          "ZIP enviado para S3:",
+          uploadedZip
+        );
 
-          payload: {
+        // 4. Finaliza banco
+        await finalizeZipCompleted(
+          videoId,
+          uploadedZip.s3Path
+        );
+
+        // 5. Notifica usuário
+        if (user_email) {
+
+          await sqs.send(
+            new SendMessageCommand({
+              QueueUrl: config.notificationQueueUrl,
+
+              MessageBody: JSON.stringify({
+                event_type: "VIDEO_COMPLETED",
+
+                payload: {
+                  video_id: videoId,
+                  user_email,
+                  zip_path: uploadedZip.s3Path
+                }
+              })
+            })
+          );
+
+          console.log(
+            "Notificação VIDEO_COMPLETED enviada:",
+            {
+              video_id: videoId,
+              user_email
+            }
+          );
+        }
+
+        console.log(
+          "Vídeo finalizado como COMPLETED:",
+          {
             video_id: videoId,
-            user_email,
-            zip_path: uploadedZip.s3Path
+            zip_path: uploadedZip.s3Path,
           }
-        })
-      })
-    );
+        );
 
-    console.log(
-      "Notificação VIDEO_COMPLETED enviada:",
-      {
-        video_id: videoId,
-        user_email
+      } catch (error) {
+
+        newrelic.noticeError(error);
+
+        throw error;
+
+      } finally {
+
+        transaction.end();
+
       }
-    );
-  }
-
-  console.log("Vídeo finalizado como COMPLETED:", {
-    video_id: videoId,
-    zip_path: uploadedZip.s3Path,
-  });
-
+    }
+  );
 }
 
 async function pollQueue() {
