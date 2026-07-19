@@ -1,3 +1,5 @@
+'use strict';
+
 exports.config = {
   app_name: ['video-worker'],
   license_key: process.env.NEW_RELIC_LICENSE_KEY,
