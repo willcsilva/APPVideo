@@ -18,6 +18,10 @@ import { s3 } from "./infra/s3.js";
 import { pool } from "./infra/db.js";
 import { config } from "./config.js";
 
+if (process.env.NODE_ENV !== "test") {
+  await import("newrelic");
+}
+
 async function streamToBuffer(stream) {
   const chunks = [];
 

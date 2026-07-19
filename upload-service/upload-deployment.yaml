@@ -103,6 +103,15 @@ spec:
             - name: SQS_NOTIFICATION_QUEUE_URL
               value: http://localstack.infra.svc.cluster.local:4566/000000000000/notification
 
+            - name: NEW_RELIC_APP_NAME
+              value: upload-service
+
+            - name: NEW_RELIC_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: NEW_RELIC_LICENSE_KEY
+
           livenessProbe:
             httpGet:
               path: /health

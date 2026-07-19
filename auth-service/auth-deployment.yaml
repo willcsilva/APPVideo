@@ -75,12 +75,17 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: NEW_RELIC_LICENSE_KEY
+            
+            - name: NEW_RELIC_APP_NAME
+              value: auth-service
 
             - name: AWS_REGION
               value: us-east-1
 
             - name: AWS_ENDPOINT
               value: http://localstack.infra.svc.cluster.local:4566
+
+
 
           livenessProbe:
             httpGet:

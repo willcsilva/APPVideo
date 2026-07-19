@@ -6,6 +6,7 @@
     "@aws-sdk/client-s3": "^3.820.0",
     "@aws-sdk/client-sqs": "^3.820.0",
     "archiver": "^7.0.1",
+    "newrelic": "^14.3.0",
     "pg": "^8.13.1",
     "uuid": "^11.1.0"
   }

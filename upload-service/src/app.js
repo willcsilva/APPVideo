@@ -15,6 +15,10 @@ import {
   GetObjectCommand
 } from "@aws-sdk/client-s3";
 
+if (process.env.NODE_ENV !== "test") {
+  await import("newrelic");
+}
+
 
 const app = express();
 app.use(cors());

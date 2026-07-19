@@ -19,6 +19,11 @@ import { config } from "./config.js";
 import { execFile } from "child_process";
 import { promisify } from "util";
 
+if (process.env.NODE_ENV !== "test") {
+  await import("newrelic");
+}
+
+
 const execFileAsync = promisify(execFile);
 
 async function streamToBuffer(stream) {

@@ -99,3 +99,12 @@ spec:
 
             - name: LOCAL_ZIP_DIR
               value: "/tmp/zips"
+
+            - name: NEW_RELIC_APP_NAME
+              value: zip-service
+
+            - name: NEW_RELIC_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: NEW_RELIC_LICENSE_KEY
