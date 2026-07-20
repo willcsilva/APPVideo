@@ -544,42 +544,36 @@ FRAMES_EXTRACTED
 COMPLETED
 ```
 
+### ⚠️ Fluxo em Caso de Falha
 
-Em caso de falha:
-
-#### 🔷 Diagrama
-
+```text
 PROCESSING
-    |
-    v
+    ↓
 FAILED
+```
 
+### 🏗️ Arquitetura Final Implantada
 
-Arquitetura Final Implantada
-
-#### 🔷 Diagrama
-
-
+```text
 appvideo.willow.tec.br
-     |
-     v
+        │
+        ▼
 AWS ALB
-     |
-     v
+        │
+        ▼
 Amazon EKS
-  |
-  +-- Dashboard UI
-  +-- Auth Service
-  +-- Upload Service
-  +-- Status Service
-  +-- Video Worker
-  +-- Zip Service
-  +-- Notification Service
+├── Dashboard UI
+├── Auth Service
+├── Upload Service
+├── Status Service
+├── Video Worker
+├── Zip Service
+└── Notification Service
 
-AWS Services:
-  |
-  +-- Amazon RDS PostgreSQL
-  +-- Amazon S3
-  +-- Amazon SQS
-  +-- Amazon SES
-  +-- AWS ACM
+AWS Services
+├── Amazon RDS PostgreSQL
+├── Amazon S3
+├── Amazon SQS
+├── Amazon SES
+└── AWS ACM
+```
