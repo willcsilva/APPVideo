@@ -182,15 +182,20 @@ kubectl apply -f k8s/
 
 ## 📋 Visão Geral do Sistema
 
-A seguir, está o desenho da arquitetura do sistema, com os principais componentes e o fluxo entre os serviços no ambiente de Desenvolvimento "STAGE"
+A seguir, está o desenho da arquitetura do sistema, com os principais componentes e o fluxo entre os serviços no ambiente de Desenvolvimento "STAGE" e Producao AWS Branch "MAIN"
 
 ### 🔵 Diagrama Simplificado
 
 ![Arquitetura Simplificada](docs/architecture-diagram.svg)
 
+
+### Ambiente Cloud AWS
+
 ![Arquitetura Cloud](docs/Arquitetura%20AWS%20-%20APPVideo.png)
 
-> Estes diagramas representam a visão completa da solução em Kubernetes, incluindo entrada do usuário, camada de autenticação e upload, fila de processamento assíncrono (SQS), workers de processamento de vídeo com FFmpeg, serviço de compactação, notificações e infraestrutura de persistência (PostgreSQL, Redis e S3).
+---
+
+Estes diagramas representam a visão completa da solução em Kubernetes, incluindo entrada do usuário, camada de autenticação e upload, fila de processamento assíncrono (SQS), workers de processamento de vídeo com FFmpeg, serviço de compactação, notificações e infraestrutura de persistência (PostgreSQL, Redis e S3).
 
 ---
 
