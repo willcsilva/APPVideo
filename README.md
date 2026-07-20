@@ -224,3 +224,379 @@ O APPVideo é uma plataforma para upload, processamento e acompanhamento de víd
 | de vídeos     |   | eventos       |   | por e-mail    |
 +----------------+   +----------------+   +----------------+
 ```
+
+### 🧩 Responsabilidades
+
+- Upload de vídeos
+- Processamento assíncrono
+- Fragmentação de vídeos
+- Geração de arquivos ZIP
+- Consulta de status
+- Notificações por e-mail
+
+### 🧱 C4 - Nível 2 (Container Diagram)
+
+Os componentes executáveis da solução são organizados em containers que se comunicam por HTTPS, filas e serviços de armazenamento.
+
+#### 🔷 Diagrama
+
+```text
++---------------------------+
+|        Usuário            |
++------------+--------------+
+             |
+             | HTTPS
+             v
++-----------------------------------------------+
+|        Cloudflare + AWS Application Load Balancer |
++-------------------------+-------------------------+
+                          |
+                          v
++---------------------------------------------------+
+|                Dashboard UI (Frontend)            |
++-------------------------+-------------------------+
+                          |
+            +-------------+-------------+
+            |             |             |
+            v             v             v
++----------------+ +----------------+ +----------------+
+| Auth Service  | | Upload Service| | Status Service |
++----------------+ +----------------+ +----------------+
+
+                          |
+                          v
++---------------------------+
+| AWS SQS                  |
+| video queue              |
++---------------------------+
+                          |
+                          v
++---------------------------+
+| Video Processor Worker   |
++---------------------------+
+                          |
+                          v
++---------------------------+
+| AWS SQS                  |
+| zip queue                |
++---------------------------+
+                          |
+                          v
++---------------------------+
+| Zip Service              |
++---------------------------+
+                          |
+                          v
++---------------------------+
+| Amazon S3                |
++---------------------------+
+                          |
+                          v
++---------------------------+
+| Notification Service     |
++---------------------------+
+                          |
+                          v
++---------------------------+
+| Amazon SES               |
++---------------------------+
+
++-----------------------------------------------+
+| PostgreSQL RDS                                |
+| users / videos / jobs / events                |
++-----------------------------------------------+
+```
+
+### 🧩 C4 - Nível 3 (Upload Service)
+
+Descrição
+Principal orquestrador do fluxo de negócio.
+
+#### 🔷 Diagrama
+
++--------------------+
+                | Upload Controller  |
+                +---------+----------+
+                          |
+              +-----------+-----------+
+              |                       |
+              v                       v
+
+      +---------------+      +---------------+
+      | PostgreSQL    |      | AWS S3 Raw    |
+      +---------------+      +---------------+
+
+              |
+              v
+
+      +---------------+
+      | SQS Producer  |
+      +---------------+
+
+
+Responsabilidades
+
+- Receber upload
+- Persistir metadados
+- Registrar job
+- Publicar evento VIDEO_RECEIVED
+- Enviar vídeo para S3
+
+
+C4 - Nível 3 (Video Processor Worker)
+
+#### 🔷 Diagrama
+
++----------------------+
+          | Poll SQS             |
+          +----------+-----------+
+                     |
+                     v
+
+          +----------------------+
+          | Download do vídeo    |
+          | AWS S3 Raw           |
+          +----------+-----------+
+                     |
+                     v
+
+          +----------------------+
+          | FFmpeg               |
+          | Fragmentação         |
+          +----------+-----------+
+                     |
+                     v
+
+          +----------------------+
+          | Upload fragmentos    |
+          | AWS S3 Processed     |
+          +----------+-----------+
+                     |
+                     v
+
+          +----------------------+
+          | Evento FRAMES_READY  |
+          +----------+-----------+
+                     |
+                     v
+
+                  SQS Zip
+
+
+C4 - Nível 3 (Zip Service)
+
+#### 🔷 Diagrama
+
++----------------------+
+          | Consome FRAMES_READY |
+          +----------+-----------+
+                     |
+                     v
+
+          +----------------------+
+          | Download fragmentos  |
+          +----------+-----------+
+                     |
+                     v
+
+          +----------------------+
+          | Geração ZIP          |
+          +----------+-----------+
+                     |
+                     v
+
+          +----------------------+
+          | Upload ZIP S3        |
+          +----------+-----------+
+                     |
+                     v
+
+          +----------------------+
+          | VIDEO_COMPLETED      |
+          +----------------------+
+
+
+C4 - Nível 3 (Notification Service)
+
+#### 🔷 Diagrama
+
++----------------------+
+          | Consome fila         |
+          | notification         |
+          +----------+-----------+
+                     |
+                     v
+
+          +----------------------+
+          | Template Email       |
+          +----------+-----------+
+                     |
+                     v
+
+          +----------------------+
+          | AWS SES              |
+          +----------------------+
+
+Eventos processados
+
+- VIDEO_RECEIVED
+- VIDEO_PROCESSING
+- VIDEO_COMPLETED
+
+Tecnologias Utilizadas
+
+Categoria	Tecnologia
+Frontend	HTML + JS
+Backend	Node.js
+Banco	PostgreSQL RDS
+Container	Docker
+Orquestração	Kubernetes (EKS)
+Ingress	AWS Load Balancer Controller
+DNS	Cloudflare
+Armazenamento	AWS S3
+Mensageria	AWS SQS
+Email	AWS SES
+Observabilidade	New Relic
+Processamento Vídeo	FFmpeg
+
+
+Fluxo E2E resumido
+
+#### 🔷 Diagrama
+
+Usuário
+   |
+   v
+Upload Video
+   |
+   v
+Upload Service
+   |
+   v
+AWS S3 (RAW)
+   |
+   v
+SQS (VIDEO)
+   |
+   v
+Video Worker
+   |
+   v
+S3 (PROCESSED)
+   |
+   v
+SQS (ZIP)
+   |
+   v
+Zip Service
+   |
+   v
+S3 (ZIP)
+   |
+   v
+Notification Service
+   |
+   v
+AWS SES
+   |
+   v
+Usuário recebe e-mail
+
+
+
+----
+
+Requisitos Não Funcionais
+Escalabilidade
+
+Processamento desacoplado através de filas SQS.
+Serviços executados em pods independentes no Amazon EKS.
+Capacidade de escalar horizontalmente os Workers.
+
+Disponibilidade
+
+Balanceamento de carga através do AWS ALB.
+Serviços executando em containers Kubernetes.
+Armazenamento persistente em Amazon S3 e Amazon RDS.
+
+Segurança
+
+Autenticação via JWT.
+Comunicação HTTPS através de ACM + ALB.
+Credenciais armazenadas em Secrets e variáveis de ambiente.
+Controle de acesso utilizando IAM Roles.
+
+Observabilidade
+
+Logs centralizados dos microserviços.
+Instrumentação utilizando New Relic.
+Monitoramento de filas SQS e processamento de eventos.
+
+
+Decisões Arquiteturais
+Por que utilizar SQS?
+A utilização do Amazon SQS desacopla o upload do processamento de vídeo, permitindo resiliência e escalabilidade.
+Por que utilizar S3?
+O Amazon S3 foi utilizado para armazenamento de arquivos brutos, fragmentos processados e arquivos compactados.
+Por que utilizar Kubernetes (EKS)?
+O Amazon EKS fornece:
+
+Orquestração de containers.
+Escalabilidade horizontal.
+Alta disponibilidade.
+Padronização de deploy.
+
+Fluxo de Estados do Vídeo
+
+#### 🔷 Diagrama
+
+RECEIVED
+    |
+    v
+PROCESSING
+    |
+    v
+FRAMES_EXTRACTED
+    |
+    v
+COMPLETED
+
+
+Em caso de falha:
+
+#### 🔷 Diagrama
+
+PROCESSING
+    |
+    v
+FAILED
+
+
+Arquitetura Final Implantada
+
+#### 🔷 Diagrama
+
+
+appvideo.willow.tec.br
+     |
+     v
+AWS ALB
+     |
+     v
+Amazon EKS
+  |
+  +-- Dashboard UI
+  +-- Auth Service
+  +-- Upload Service
+  +-- Status Service
+  +-- Video Worker
+  +-- Zip Service
+  +-- Notification Service
+
+AWS Services:
+  |
+  +-- Amazon RDS PostgreSQL
+  +-- Amazon S3
+  +-- Amazon SQS
+  +-- Amazon SES
+  +-- AWS ACM
