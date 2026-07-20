@@ -10,7 +10,7 @@ import { config } from "./config.js";
 
 const DASHBOARD_URL =
   process.env.DASHBOARD_URL ||
-  "http://app.local:30741";
+  "http://localhost";
 
 function calculateBackoffSeconds(receiveCount) {
   const attempt = Number(receiveCount || 1);

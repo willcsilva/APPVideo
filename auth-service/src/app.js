@@ -40,7 +40,27 @@ app.get("/health", async (_req, res) => {
     });
   }
 });
+// app.get("/health", async (_req, res) => {
+//   try {
+//     await pool.query("SELECT 1");
 
+//     return res.status(200).json({
+//       status: "ok"
+//     });
+
+//   } catch (error) {
+
+//     console.error(
+//       "HEALTHCHECK ERROR:",
+//       error
+//     );
+
+//     return res.status(500).json({
+//       status: "error",
+//       details: error.message
+//     });
+//   }
+// });
 /**
  * @swagger
  * /register:

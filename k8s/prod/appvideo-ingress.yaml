@@ -1,0 +1,64 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+
+metadata:
+  name: appvideo-ingress
+  namespace: backend
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+
+    alb.ingress.kubernetes.io/listen-ports: >
+      [{"HTTP":80},{"HTTPS":443}]
+
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-2:588738575384:certificate/17ff39f2-1f91-4962-a6d8-0d8abb15624c
+
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+
+spec:
+  ingressClassName: alb
+
+  rules:
+    - host: appvideo.willow.tec.br
+      http:
+        paths:
+
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dashboard-ui
+                port:
+                  number: 80
+
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 3001
+
+          - path: /upload
+            pathType: Prefix
+            backend:
+              service:
+                name: upload-service
+                port:
+                  number: 3000
+
+          - path: /videos
+            pathType: Prefix
+            backend:
+              service:
+                name: upload-service
+                port:
+                  number: 3000
+
+          - path: /status
+            pathType: Prefix
+            backend:
+              service:
+                name: status-service
+                port:
+                  number: 80

@@ -607,21 +607,56 @@ async function pollQueue() {
   }
 }
 
+async function startPolling() {
+  while (true) {
+    try {
+      await pollQueue();
+    } catch (error) {
+      console.error(
+        "Erro durante polling:",
+        error
+      );
+    }
+
+    await new Promise(resolve =>
+      setTimeout(resolve, 5000)
+    );
+  }
+}
+
 async function bootstrap() {
   try {
     await pool.query("SELECT 1");
-    console.log("Conexão com Postgres OK");
-    console.log("Worker iniciado. Versão: passo-8-fix-1");
-    console.log("Worker escutando fila:", config.videoQueueName);
-    console.log("Diretório local de download:", config.localVideoDir);
-    console.log("Diretório local de frames:", config.localFramesDir);
-    console.log("Fila de saída do ZIP:", config.zipQueueName);
 
-    setInterval(async () => {
-      await pollQueue();
-    }, 5000);
+    console.log("Conexão com Postgres OK");
+    console.log(
+      "Worker iniciado. Versão: passo-8-fix-1"
+    );
+    console.log(
+      "Worker escutando fila:",
+      config.videoQueueName
+    );
+    console.log(
+      "Diretório local de download:",
+      config.localVideoDir
+    );
+    console.log(
+      "Diretório local de frames:",
+      config.localFramesDir
+    );
+    console.log(
+      "Fila de saída do ZIP:",
+      config.zipQueueName
+    );
+
+    await startPolling();
+
   } catch (error) {
-    console.error("Erro ao iniciar worker:", error.message);
+    console.error(
+      "Erro ao iniciar worker:",
+      error.message
+    );
+
     process.exit(1);
   }
 }
