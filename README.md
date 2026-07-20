@@ -193,3 +193,34 @@ A seguir, está o desenho da arquitetura do sistema, com os principais component
 > Estes diagramas representam a visão completa da solução em Kubernetes, incluindo entrada do usuário, camada de autenticação e upload, fila de processamento assíncrono (SQS), workers de processamento de vídeo com FFmpeg, serviço de compactação, notificações e infraestrutura de persistência (PostgreSQL, Redis e S3).
 
 ---
+
+### 🧭 C4 - Nível 1 (Contexto do Sistema)
+
+O APPVideo é uma plataforma para upload, processamento e acompanhamento de vídeos. O usuário realiza o envio de arquivos, acompanha o status da operação e recebe notificações por e-mail ao fim do fluxo.
+
+#### 🔷 Diagrama
+
+```text
++----------------------+
+|       Usuário       |
+| (Envio e acompanhamento) |
++----------+-----------+
+           |
+           | HTTPS
+           v
++-----------------------------------------------+
+|                    APPVideo                    |
+| Plataforma de upload, processamento e        |
+| acompanhamento de vídeos                    |
++------------------+----------------------------+
+                   |                            
+                   |                            
+         +---------+---------+        +---------+---------+
+         |                   |        |                   |
+         v                   v        v                   v
++----------------+   +----------------+   +----------------+
+| Amazon S3     |   | Amazon SQS    |   | Amazon SES    |
+| Armazenamento |   | Fila de       |   | Notificações  |
+| de vídeos     |   | eventos       |   | por e-mail    |
++----------------+   +----------------+   +----------------+
+```
