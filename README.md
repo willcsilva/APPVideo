@@ -309,32 +309,31 @@ Os componentes executáveis da solução são organizados em containers que se c
 
 ### 🧩 C4 - Nível 3 (Upload Service)
 
-Descrição
-Principal orquestrador do fluxo de negócio.
+A principal função deste componente é orquestrar o fluxo de negócio de upload, persistência e publicação de eventos.
 
 #### 🔷 Diagrama
 
-+--------------------+
-                | Upload Controller  |
-                +---------+----------+
-                          |
-              +-----------+-----------+
-              |                       |
-              v                       v
+```text
++----------------------+
+| Upload Controller    |
++----------+-----------+
+           |
+           +-------------------+
+           |                   |
+           v                   v
++----------------+   +----------------------+
+| PostgreSQL     |   | AWS S3 Raw          |
+| metadados     |   | vídeo original      |
++----------------+   +----------------------+
+           |
+           v
++----------------------+
+| SQS Producer         |
+| VIDEO_RECEIVED       |
++----------------------+
+```
 
-      +---------------+      +---------------+
-      | PostgreSQL    |      | AWS S3 Raw    |
-      +---------------+      +---------------+
-
-              |
-              v
-
-      +---------------+
-      | SQS Producer  |
-      +---------------+
-
-
-Responsabilidades
+### 🧩 Responsabilidades
 
 - Receber upload
 - Persistir metadados
@@ -342,42 +341,40 @@ Responsabilidades
 - Publicar evento VIDEO_RECEIVED
 - Enviar vídeo para S3
 
+### 🧩 C4 - Nível 3 (Video Processor Worker)
 
-C4 - Nível 3 (Video Processor Worker)
+Este componente consome eventos da fila, processa o vídeo e publica o resultado para o próximo estágio.
 
 #### 🔷 Diagrama
 
+```text
 +----------------------+
-          | Poll SQS             |
-          +----------+-----------+
-                     |
-                     v
-
-          +----------------------+
-          | Download do vídeo    |
-          | AWS S3 Raw           |
-          +----------+-----------+
-                     |
-                     v
-
-          +----------------------+
-          | FFmpeg               |
-          | Fragmentação         |
-          +----------+-----------+
-                     |
-                     v
-
-          +----------------------+
-          | Upload fragmentos    |
-          | AWS S3 Processed     |
-          +----------+-----------+
-                     |
-                     v
-
-          +----------------------+
-          | Evento FRAMES_READY  |
-          +----------+-----------+
-                     |
+| Poll SQS            |
++----------+-----------+
+           |
+           v
++----------------------+
+| Download do vídeo   |
+| AWS S3 Raw          |
++----------+-----------+
+           |
+           v
++----------------------+
+| FFmpeg              |
+| Fragmentação        |
++----------+-----------+
+           |
+           v
++----------------------+
+| Upload fragmentos   |
+| AWS S3 Processed    |
++----------+-----------+
+           |
+           v
++----------------------+
+| Evento FRAMES_READY |
++----------------------+
+```
                      v
 
                   SQS Zip
