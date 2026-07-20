@@ -375,188 +375,174 @@ Este componente consome eventos da fila, processa o vídeo e publica o resultado
 | Evento FRAMES_READY |
 +----------------------+
 ```
-                     v
 
-                  SQS Zip
+### 🧩 C4 - Nível 3 (Zip Service)
 
-
-C4 - Nível 3 (Zip Service)
+Este componente consome os fragmentos processados, gera o arquivo compactado e publica o evento de conclusão.
 
 #### 🔷 Diagrama
 
+```text
 +----------------------+
-          | Consome FRAMES_READY |
-          +----------+-----------+
-                     |
-                     v
+| Consome FRAMES_READY |
++----------+-----------+
+           |
+           v
++----------------------+
+| Download fragmentos  |
++----------+-----------+
+           |
+           v
++----------------------+
+| Geração ZIP         |
++----------+-----------+
+           |
+           v
++----------------------+
+| Upload ZIP no S3    |
++----------+-----------+
+           |
+           v
++----------------------+
+| VIDEO_COMPLETED     |
++----------------------+
+```
 
-          +----------------------+
-          | Download fragmentos  |
-          +----------+-----------+
-                     |
-                     v
+### 🧩 C4 - Nível 3 (Notification Service)
 
-          +----------------------+
-          | Geração ZIP          |
-          +----------+-----------+
-                     |
-                     v
-
-          +----------------------+
-          | Upload ZIP S3        |
-          +----------+-----------+
-                     |
-                     v
-
-          +----------------------+
-          | VIDEO_COMPLETED      |
-          +----------------------+
-
-
-C4 - Nível 3 (Notification Service)
+Este componente consome as notificações da fila e envia mensagens por e-mail para o usuário.
 
 #### 🔷 Diagrama
 
+```text
 +----------------------+
-          | Consome fila         |
-          | notification         |
-          +----------+-----------+
-                     |
-                     v
+| Consome fila         |
+| notification         |
++----------+-----------+
+           |
+           v
++----------------------+
+| Template de e-mail   |
++----------+-----------+
+           |
+           v
++----------------------+
+| AWS SES             |
++----------------------+
+```
 
-          +----------------------+
-          | Template Email       |
-          +----------+-----------+
-                     |
-                     v
-
-          +----------------------+
-          | AWS SES              |
-          +----------------------+
-
-Eventos processados
+### 📌 Eventos Processados
 
 - VIDEO_RECEIVED
 - VIDEO_PROCESSING
 - VIDEO_COMPLETED
 
-Tecnologias Utilizadas
+### 🛠️ Tecnologias Utilizadas
 
-Categoria	Tecnologia
-Frontend	HTML + JS
-Backend	Node.js
-Banco	PostgreSQL RDS
-Container	Docker
-Orquestração	Kubernetes (EKS)
-Ingress	AWS Load Balancer Controller
-DNS	Cloudflare
-Armazenamento	AWS S3
-Mensageria	AWS SQS
-Email	AWS SES
-Observabilidade	New Relic
-Processamento Vídeo	FFmpeg
+| Categoria | Tecnologia |
+|-----------|------------|
+| Frontend | HTML + JS |
+| Backend | Node.js |
+| Banco | PostgreSQL RDS |
+| Container | Docker |
+| Orquestração | Kubernetes (EKS) |
+| Ingress | AWS Load Balancer Controller |
+| DNS | Cloudflare |
+| Armazenamento | AWS S3 |
+| Mensageria | AWS SQS |
+| Email | AWS SES |
+| Observabilidade | New Relic |
+| Processamento de vídeo | FFmpeg |
 
+### 🔄 Fluxo E2E Resumido
 
-Fluxo E2E resumido
-
-#### 🔷 Diagrama
-
+```text
 Usuário
-   |
-   v
+  ↓
 Upload Video
-   |
-   v
+  ↓
 Upload Service
-   |
-   v
+  ↓
 AWS S3 (RAW)
-   |
-   v
+  ↓
 SQS (VIDEO)
-   |
-   v
+  ↓
 Video Worker
-   |
-   v
+  ↓
 S3 (PROCESSED)
-   |
-   v
+  ↓
 SQS (ZIP)
-   |
-   v
+  ↓
 Zip Service
-   |
-   v
+  ↓
 S3 (ZIP)
-   |
-   v
+  ↓
 Notification Service
-   |
-   v
+  ↓
 AWS SES
-   |
-   v
+  ↓
 Usuário recebe e-mail
+```
 
+---
 
+## 📌 Requisitos Não Funcionais
 
-----
-
-Requisitos Não Funcionais
-Escalabilidade
+### Escalabilidade
 
 Processamento desacoplado através de filas SQS.
 Serviços executados em pods independentes no Amazon EKS.
 Capacidade de escalar horizontalmente os Workers.
 
-Disponibilidade
+### Disponibilidade
 
 Balanceamento de carga através do AWS ALB.
 Serviços executando em containers Kubernetes.
 Armazenamento persistente em Amazon S3 e Amazon RDS.
 
-Segurança
+### Segurança
 
 Autenticação via JWT.
 Comunicação HTTPS através de ACM + ALB.
 Credenciais armazenadas em Secrets e variáveis de ambiente.
 Controle de acesso utilizando IAM Roles.
 
-Observabilidade
+### Observabilidade
 
 Logs centralizados dos microserviços.
 Instrumentação utilizando New Relic.
 Monitoramento de filas SQS e processamento de eventos.
 
+## 🧠 Decisões Arquiteturais
 
-Decisões Arquiteturais
-Por que utilizar SQS?
+### Por que utilizar SQS?
+
 A utilização do Amazon SQS desacopla o upload do processamento de vídeo, permitindo resiliência e escalabilidade.
-Por que utilizar S3?
+
+### Por que utilizar S3?
+
 O Amazon S3 foi utilizado para armazenamento de arquivos brutos, fragmentos processados e arquivos compactados.
-Por que utilizar Kubernetes (EKS)?
+
+### Por que utilizar Kubernetes (EKS)?
+
 O Amazon EKS fornece:
 
-Orquestração de containers.
-Escalabilidade horizontal.
-Alta disponibilidade.
-Padronização de deploy.
+- Orquestração de containers
+- Escalabilidade horizontal
+- Alta disponibilidade
+- Padronização de deploy
 
-Fluxo de Estados do Vídeo
+## 🔄 Fluxo de Estados do Vídeo
 
-#### 🔷 Diagrama
-
+```text
 RECEIVED
-    |
-    v
+  ↓
 PROCESSING
-    |
-    v
+  ↓
 FRAMES_EXTRACTED
-    |
-    v
+  ↓
 COMPLETED
+```
 
 
 Em caso de falha:
