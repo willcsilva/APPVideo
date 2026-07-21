@@ -182,7 +182,7 @@ kubectl apply -f k8s/
 
 ## 📋 Visão Geral do Sistema
 
-A seguir, está o desenho da arquitetura do sistema, com os principais componentes e o fluxo entre os serviços no ambiente de Desenvolvimento "STAGE"
+A seguir, está o desenho da arquitetura do sistema, com os principais componentes e o fluxo entre os serviços no ambiente de Desenvolvimento "STAGE" e Producao AWS Branch "MAIN"
 
 ### 🔵 Diagrama Simplificado
 
@@ -190,6 +190,396 @@ A seguir, está o desenho da arquitetura do sistema, com os principais component
 
 ![Arquitetura Cloud](docs/Arquitetura%20AWS%20-%20APPVideo.png)
 
-> Estes diagramas representam a visão completa da solução em Kubernetes, incluindo entrada do usuário, camada de autenticação e upload, fila de processamento assíncrono (SQS), workers de processamento de vídeo com FFmpeg, serviço de compactação, notificações e infraestrutura de persistência (PostgreSQL, Redis e S3).
+### Ambiente Cloud AWS
+
+![Arquitetura Cloud](docs/Arquitetura%20AWS%20-%20APPVideo.png)
 
 ---
+
+Estes diagramas representam a visão completa da solução em Kubernetes, incluindo entrada do usuário, camada de autenticação e upload, fila de processamento assíncrono (SQS), workers de processamento de vídeo com FFmpeg, serviço de compactação, notificações e infraestrutura de persistência (PostgreSQL, Redis e S3).
+
+---
+
+### 🧭 C4 - Nível 1 (Contexto do Sistema)
+
+O APPVideo é uma plataforma para upload, processamento e acompanhamento de vídeos. O usuário realiza o envio de arquivos, acompanha o status da operação e recebe notificações por e-mail ao fim do fluxo.
+
+#### 🔷 Diagrama
+
+```text
++----------------------+
+|       Usuário       |
+| (Envio e acompanhamento) |
++----------+-----------+
+           |
+           | HTTPS
+           v
++-----------------------------------------------+
+|                    APPVideo                    |
+| Plataforma de upload, processamento e        |
+| acompanhamento de vídeos                    |
++------------------+----------------------------+
+                   |                            
+                   |                            
+         +---------+---------+        +---------+---------+
+         |                   |        |                   |
+         v                   v        v                   v
++----------------+   +----------------+   +----------------+
+| Amazon S3     |   | Amazon SQS    |   | Amazon SES    |
+| Armazenamento |   | Fila de       |   | Notificações  |
+| de vídeos     |   | eventos       |   | por e-mail    |
++----------------+   +----------------+   +----------------+
+```
+
+### 🧩 Responsabilidades
+
+- Upload de vídeos
+- Processamento assíncrono
+- Fragmentação de vídeos
+- Geração de arquivos ZIP
+- Consulta de status
+- Notificações por e-mail
+
+### 🧱 C4 - Nível 2 (Container Diagram)
+
+Os componentes executáveis da solução são organizados em containers que se comunicam por HTTPS, filas e serviços de armazenamento.
+
+#### 🔷 Diagrama
+
+```text
++---------------------------+
+|        Usuário            |
++------------+--------------+
+             |
+             | HTTPS
+             v
++-----------------------------------------------+
+|        Cloudflare + AWS Application Load Balancer |
++-------------------------+-------------------------+
+                          |
+                          v
++---------------------------------------------------+
+|                Dashboard UI (Frontend)            |
++-------------------------+-------------------------+
+                          |
+            +-------------+-------------+
+            |             |             |
+            v             v             v
++----------------+ +----------------+ +----------------+
+| Auth Service  | | Upload Service| | Status Service |
++----------------+ +----------------+ +----------------+
+
+                          |
+                          v
++---------------------------+
+| AWS SQS                  |
+| video queue              |
++---------------------------+
+                          |
+                          v
++---------------------------+
+| Video Processor Worker   |
++---------------------------+
+                          |
+                          v
++---------------------------+
+| AWS SQS                  |
+| zip queue                |
++---------------------------+
+                          |
+                          v
++---------------------------+
+| Zip Service              |
++---------------------------+
+                          |
+                          v
++---------------------------+
+| Amazon S3                |
++---------------------------+
+                          |
+                          v
++---------------------------+
+| Notification Service     |
++---------------------------+
+                          |
+                          v
++---------------------------+
+| Amazon SES               |
++---------------------------+
+
++-----------------------------------------------+
+| PostgreSQL RDS                                |
+| users / videos / jobs / events                |
++-----------------------------------------------+
+```
+
+### 🧩 C4 - Nível 3 (Upload Service)
+
+A principal função deste componente é orquestrar o fluxo de negócio de upload, persistência e publicação de eventos.
+
+#### 🔷 Diagrama
+
+```text
++----------------------+
+| Upload Controller    |
++----------+-----------+
+           |
+           +-------------------+
+           |                   |
+           v                   v
++----------------+   +----------------------+
+| PostgreSQL     |   | AWS S3 Raw          |
+| metadados     |   | vídeo original      |
++----------------+   +----------------------+
+           |
+           v
++----------------------+
+| SQS Producer         |
+| VIDEO_RECEIVED       |
++----------------------+
+```
+
+### 🧩 Responsabilidades
+
+- Receber upload
+- Persistir metadados
+- Registrar job
+- Publicar evento VIDEO_RECEIVED
+- Enviar vídeo para S3
+
+### 🧩 C4 - Nível 3 (Video Processor Worker)
+
+Este componente consome eventos da fila, processa o vídeo e publica o resultado para o próximo estágio.
+
+#### 🔷 Diagrama
+
+```text
++----------------------+
+| Poll SQS            |
++----------+-----------+
+           |
+           v
++----------------------+
+| Download do vídeo   |
+| AWS S3 Raw          |
++----------+-----------+
+           |
+           v
++----------------------+
+| FFmpeg              |
+| Fragmentação        |
++----------+-----------+
+           |
+           v
++----------------------+
+| Upload fragmentos   |
+| AWS S3 Processed    |
++----------+-----------+
+           |
+           v
++----------------------+
+| Evento FRAMES_READY |
++----------------------+
+```
+
+### 🧩 C4 - Nível 3 (Zip Service)
+
+Este componente consome os fragmentos processados, gera o arquivo compactado e publica o evento de conclusão.
+
+#### 🔷 Diagrama
+
+```text
++----------------------+
+| Consome FRAMES_READY |
++----------+-----------+
+           |
+           v
++----------------------+
+| Download fragmentos  |
++----------+-----------+
+           |
+           v
++----------------------+
+| Geração ZIP         |
++----------+-----------+
+           |
+           v
++----------------------+
+| Upload ZIP no S3    |
++----------+-----------+
+           |
+           v
++----------------------+
+| VIDEO_COMPLETED     |
++----------------------+
+```
+
+### 🧩 C4 - Nível 3 (Notification Service)
+
+Este componente consome as notificações da fila e envia mensagens por e-mail para o usuário.
+
+#### 🔷 Diagrama
+
+```text
++----------------------+
+| Consome fila         |
+| notification         |
++----------+-----------+
+           |
+           v
++----------------------+
+| Template de e-mail   |
++----------+-----------+
+           |
+           v
++----------------------+
+| AWS SES             |
++----------------------+
+```
+
+### 📌 Eventos Processados
+
+- VIDEO_RECEIVED
+- VIDEO_PROCESSING
+- VIDEO_COMPLETED
+
+### 🛠️ Tecnologias Utilizadas
+
+| Categoria | Tecnologia |
+|-----------|------------|
+| Frontend | HTML + JS |
+| Backend | Node.js |
+| Banco | PostgreSQL RDS |
+| Container | Docker |
+| Orquestração | Kubernetes (EKS) |
+| Ingress | AWS Load Balancer Controller |
+| DNS | Cloudflare |
+| Armazenamento | AWS S3 |
+| Mensageria | AWS SQS |
+| Email | AWS SES |
+| Observabilidade | New Relic |
+| Processamento de vídeo | FFmpeg |
+
+### 🔄 Fluxo E2E Resumido
+
+```text
+Usuário
+  ↓
+Upload Video
+  ↓
+Upload Service
+  ↓
+AWS S3 (RAW)
+  ↓
+SQS (VIDEO)
+  ↓
+Video Worker
+  ↓
+S3 (PROCESSED)
+  ↓
+SQS (ZIP)
+  ↓
+Zip Service
+  ↓
+S3 (ZIP)
+  ↓
+Notification Service
+  ↓
+AWS SES
+  ↓
+Usuário recebe e-mail
+```
+
+---
+
+## 📌 Requisitos Não Funcionais
+
+### Escalabilidade
+
+Processamento desacoplado através de filas SQS.
+Serviços executados em pods independentes no Amazon EKS.
+Capacidade de escalar horizontalmente os Workers.
+
+### Disponibilidade
+
+Balanceamento de carga através do AWS ALB.
+Serviços executando em containers Kubernetes.
+Armazenamento persistente em Amazon S3 e Amazon RDS.
+
+### Segurança
+
+Autenticação via JWT.
+Comunicação HTTPS através de ACM + ALB.
+Credenciais armazenadas em Secrets e variáveis de ambiente.
+Controle de acesso utilizando IAM Roles.
+
+### Observabilidade
+
+Logs centralizados dos microserviços.
+Instrumentação utilizando New Relic.
+Monitoramento de filas SQS e processamento de eventos.
+
+## 🧠 Decisões Arquiteturais
+
+### Por que utilizar SQS?
+
+A utilização do Amazon SQS desacopla o upload do processamento de vídeo, permitindo resiliência e escalabilidade.
+
+### Por que utilizar S3?
+
+O Amazon S3 foi utilizado para armazenamento de arquivos brutos, fragmentos processados e arquivos compactados.
+
+### Por que utilizar Kubernetes (EKS)?
+
+O Amazon EKS fornece:
+
+- Orquestração de containers
+- Escalabilidade horizontal
+- Alta disponibilidade
+- Padronização de deploy
+
+## 🔄 Fluxo de Estados do Vídeo
+
+```text
+RECEIVED
+  ↓
+PROCESSING
+  ↓
+FRAMES_EXTRACTED
+  ↓
+COMPLETED
+```
+
+### ⚠️ Fluxo em Caso de Falha
+
+```text
+PROCESSING
+    ↓
+FAILED
+```
+
+### 🏗️ Arquitetura Final Implantada
+
+```text
+appvideo.willow.tec.br
+        │
+        ▼
+AWS ALB
+        │
+        ▼
+Amazon EKS
+├── Dashboard UI
+├── Auth Service
+├── Upload Service
+├── Status Service
+├── Video Worker
+├── Zip Service
+└── Notification Service
+
+AWS Services
+├── Amazon RDS PostgreSQL
+├── Amazon S3
+├── Amazon SQS
+├── Amazon SES
+└── AWS ACM
+```
