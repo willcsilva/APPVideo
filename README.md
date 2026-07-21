@@ -188,7 +188,6 @@ A seguir, está o desenho da arquitetura do sistema, com os principais component
 
 ![Arquitetura Simplificada](docs/architecture-diagram.svg)
 
-![Arquitetura Cloud](docs/Arquitetura%20AWS%20-%20APPVideo.png)
 
 ### Ambiente Cloud AWS
 
