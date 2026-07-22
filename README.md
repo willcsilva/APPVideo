@@ -199,17 +199,18 @@ Estes diagramas representam a visão completa da solução em Kubernetes, inclui
 
 ---
 
-### PACOTE DOCUMENTAÇÃO ARQUITETURAL APPVIDEO
+### 📦 Pacote de Documentação Arquitetural APPVideo
 
 Inclui:
 - Documento C4
-- RF e RNF
+- Requisitos Funcionais e Não Funcionais
 - ADRs principais
 - Arquitetura AWS
 - Modelo ER
 
-Fluxo E2E:
-Usuário -> Upload Service -> S3 Raw -> SQS -> Video Worker -> S3 Processed -> SQS Zip -> Zip Service -> S3 Zip -> Notification Service -> SES.
+### 🔄 Fluxo E2E
+
+Usuário → Upload Service → S3 Raw → SQS → Video Worker → S3 Processed → SQS Zip → Zip Service → S3 Zip → Notification Service → SES.
 
 ---
 
@@ -599,10 +600,9 @@ AWS Services
 
 ---
 
+### 🧭 RF/RNF - Requisitos Funcionais e Não Funcionais
 
-### 🧭 RF/RNF - Requisitos Funcionais (RF) e Nao Funcionais (RNF) - APPVideo
-
-### RF
+### ✅ Requisitos Funcionais
 
 ```text
 RF01 Permitir cadastro de usuários.
@@ -617,7 +617,7 @@ RF09 Consultar status de processamento.
 RF10 Enviar notificações por e-mail.
 ```
 
-### RNF
+### ✅ Requisitos Não Funcionais
 
 ```text
 RNF01 Utilizar HTTPS.
@@ -632,61 +632,49 @@ RNF08 Disponibilidade através de ALB e EKS.
 
 ---
 
-### Diagrama ER (Banco de Dados)
+### 🗄️ Diagrama ER (Modelo de Dados)
 
+```text
+users
+  └── videos
+        ├── jobs
+        ├── events
+        └── outputs
+```
+
+### 🧠 Modelo ER - APPVideo
+
+- users 1:N videos
+- videos 1:N jobs
+- videos 1:N events
+- videos 1:N outputs
+
+Tabelas principais:
 - users
 - videos
 - jobs
 - events
 - outputs
 
-
-```text
-users
-  |
-  +----< videos
-              |
-              +----< jobs
-              |
-              +----< events
-              |
-              +----< outputs
-```
-## MODELO ER - APPVideo
-
-users 1:N videos
-videos 1:N jobs
-videos 1:N events
-videos 1:N outputs
-Tabelas:
-users
-videos
-jobs
-events
-outputs
-
-
 ---
 
-### Arquitetura AWS
-
+### ☁️ Arquitetura AWS
 
 ```text
 appvideo.willow.tec.br
-      |
-      v
+      │
+      ▼
 AWS ALB
-      |
-      v
+      │
+      ▼
 Amazon EKS
-  |
-  +--- Dashboard
-  +--- Auth Service
-  +--- Upload Service
-  +--- Status Service
-  +--- Video Worker
-  +--- Zip Service
-  +--- Notification Service
+├── Dashboard
+├── Auth Service
+├── Upload Service
+├── Status Service
+├── Video Worker
+├── Zip Service
+└── Notification Service
 
 Amazon S3
 Amazon SQS
@@ -699,38 +687,41 @@ AWS ACM
 
 ---
 
-### ADRs (Architecture Decision Records)
+### 🧾 ADRs (Architecture Decision Records)
 
-## ADR-001
+#### ADR-001 — Utilização do Amazon SQS
 
-- Título:
-Utilização do Amazon SQS para processamento assíncrono
+- Status: Aceito
+- Contexto: o processamento de vídeos é uma tarefa longa e deve ser desacoplada do upload.
+- Decisão: utilizar o Amazon SQS para separar os fluxos de ingestão e processamento.
+- Consequências: maior escalabilidade, resiliência e desacoplamento entre serviços.
 
-- Status:
-Aceito
+#### ADR-002 — Utilização do Amazon EKS
 
-- Contexto:
-Processamento de vídeos é uma tarefa longa.
+- Status: Aceito
+- Contexto: a solução precisa de orquestração de containers com escalabilidade e alta disponibilidade.
+- Decisão: utilizar o Amazon EKS para hospedar os microsserviços.
+- Consequências: padronização de deploy e escalabilidade horizontal.
 
-- Decisão:
-Utilizar SQS para desacoplar upload e processamento.
+#### ADR-003 — Utilização do Amazon S3
 
-- Consequências:
-Maior escalabilidade e resiliência.
+- Status: Aceito
+- Contexto: é necessário armazenar vídeos brutos, fragmentos processados e arquivos compactados.
+- Decisão: utilizar o Amazon S3 como repositório principal de arquivos.
+- Consequências: armazenamento durável e escalável.
 
-## ADR-001 Utilização do Amazon SQS
-Decisão: desacoplar upload e processamento.
+#### ADR-004 — Utilização do Amazon SES
 
-## ADR-002 Utilização do Amazon EKS
-Decisão: orquestração de containers e escalabilidade.
+- Status: Aceito
+- Contexto: é preciso enviar notificações por e-mail aos usuários.
+- Decisão: utilizar o Amazon SES para envio de mensagens transacionais.
+- Consequências: integração simples e confiável para notificações.
 
-## ADR-003 Utilização do Amazon S3
-Decisão: armazenamento de vídeos, fragmentos e ZIPs.
+#### ADR-005 — Utilização do FFmpeg
 
-## DR-004 Utilização do Amazon SES
-Decisão: envio de notificações por e-mail.
-
-## ADR-005 Utilização do FFmpeg
-Decisão: fragmentação dos vídeos.
+- Status: Aceito
+- Contexto: os vídeos precisam ser fragmentados e processados para geração de artefatos intermediários.
+- Decisão: utilizar o FFmpeg para execução do processamento multimídia.
+- Consequências: suporte robusto a transformação e compactação de vídeos.
 
 
