@@ -13,7 +13,7 @@ export async function sendEmail(to, subject, body) {
   const command = new SendEmailCommand({
     Source:
     process.env.EMAIL_FROM ||
-    "noreply@appvideo.local",
+    "willow@willow.tec.br",
     Destination: {
       ToAddresses: [to],
     },

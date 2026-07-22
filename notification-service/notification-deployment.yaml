@@ -34,26 +34,53 @@ spec:
               memory: "128Mi"
 
           env:
+            # - name: NODE_ENV
+            #   value: "stage"
+
             - name: NODE_ENV
-              value: "stage"
+              value: "production"
+
+            # - name: AWS_REGION
+            #   value: "us-east-1"
 
             - name: AWS_REGION
-              value: "us-east-1"
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: AWS_REGION
 
-            - name: AWS_ENDPOINT
-              value: "http://localstack.infra.svc.cluster.local:4566"
+            - name: DASHBOARD_URL
+              value: "https://appvideo.willow.tec.br"
+            # - name: AWS_ENDPOINT
+            #   value: "http://localstack.infra.svc.cluster.local:4566"
 
-            - name: AWS_ACCESS_KEY_ID
-              value: "test"
+            # - name: AWS_ACCESS_KEY_ID
+            #   value: "test"
 
-            - name: AWS_SECRET_ACCESS_KEY
-              value: "test"
+            # - name: AWS_SECRET_ACCESS_KEY
+            #   value: "test"
 
-            - name: SQS_NOTIFICATION_QUEUE
-              value: "notification"
 
             - name: SQS_NOTIFICATION_QUEUE_URL
-              value: "http://localstack.infra.svc.cluster.local:4566/000000000000/notification"
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: SQS_NOTIFICATION_QUEUE_URL
+
+            # - name: SQS_NOTIFICATION_QUEUE_URL
+            #   value: "http://localstack.infra.svc.cluster.local:4566/000000000000/notification"
+
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: AWS_ACCESS_KEY_ID
+
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: AWS_SECRET_ACCESS_KEY
 
             - name: RETRY_MAX_RECEIVE_COUNT
               value: "5"
@@ -61,8 +88,17 @@ spec:
             - name: RETRY_BACKOFF_BASE_SECONDS
               value: "10"
 
-            - name: NOTIFICATION_EMAIL
-              value: "teste@fiap.com"
+            # - name: NOTIFICATION_EMAIL
+            #   value: "teste@fiap.com"
               
-            - name: EMAIL_FROM
-              value: noreply@appvideo.local
+            # - name: EMAIL_FROM
+            #   value: noreply@appvideo.local
+
+            - name: NEW_RELIC_APP_NAME
+              value: notification-service
+
+            - name: NEW_RELIC_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: NEW_RELIC_LICENSE_KEY

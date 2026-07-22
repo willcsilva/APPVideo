@@ -84,8 +84,7 @@ app.post(
         const key =
           `${videoId}-${file.originalname}`;
 
-        const s3Path =
-          `raw-videos/${key}`;
+        const s3Path = key;
 
         // Upload S3
         await s3.send(
@@ -457,14 +456,14 @@ const fileName =
 
 const key =
   zipPath.replace(
-    "zip-files/",
+    `${config.zipBucket}/`,
     ""
   );
 
 const response =
   await s3.send(
     new GetObjectCommand({
-      Bucket: "zip-files",
+      Bucket: config.zipBucket,
       Key: key
     })
   );

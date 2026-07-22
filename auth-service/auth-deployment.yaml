@@ -37,20 +37,35 @@ spec:
               memory: "256Mi"
 
           env:
+            # - name: NODE_ENV
+            #   value: "stage"
+
             - name: NODE_ENV
-              value: "stage"
+              value: "production"
 
             - name: PORT
               value: "3001"
 
+            # - name: DB_HOST
+            #   value: postgres.infra.svc.cluster.local
+            
             - name: DB_HOST
-              value: postgres.infra.svc.cluster.local
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_HOST
 
             - name: DB_PORT
               value: "5432"
 
+            # - name: DB_NAME
+            #   value: video_processor
+            
             - name: DB_NAME
-              value: video_processor
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: DB_NAME
 
             - name: DB_USER
               valueFrom:
@@ -63,6 +78,24 @@ spec:
                 secretKeyRef:
                   name: app-secrets
                   key: DB_PASSWORD
+
+            - name: S3_RAW_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: S3_RAW_BUCKET
+
+            - name: SQS_VIDEO_QUEUE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: SQS_VIDEO_QUEUE_URL
+
+            - name: SQS_NOTIFICATION_QUEUE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: SQS_NOTIFICATION_QUEUE_URL
 
             - name: JWT_SECRET
               valueFrom:
@@ -79,11 +112,17 @@ spec:
             - name: NEW_RELIC_APP_NAME
               value: auth-service
 
-            - name: AWS_REGION
-              value: us-east-1
+            # - name: AWS_REGION
+            #   value: us-east-1
 
-            - name: AWS_ENDPOINT
-              value: http://localstack.infra.svc.cluster.local:4566
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: AWS_REGION
+
+            # - name: AWS_ENDPOINT
+            #   value: http://localstack.infra.svc.cluster.local:4566
 
 
 
