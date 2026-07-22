@@ -199,6 +199,20 @@ Estes diagramas representam a visão completa da solução em Kubernetes, inclui
 
 ---
 
+### PACOTE DOCUMENTAÇÃO ARQUITETURAL APPVIDEO
+
+Inclui:
+- Documento C4
+- RF e RNF
+- ADRs principais
+- Arquitetura AWS
+- Modelo ER
+
+Fluxo E2E:
+Usuário -> Upload Service -> S3 Raw -> SQS -> Video Worker -> S3 Processed -> SQS Zip -> Zip Service -> S3 Zip -> Notification Service -> SES.
+
+---
+
 ### 🧭 C4 - Nível 1 (Contexto do Sistema)
 
 O APPVideo é uma plataforma para upload, processamento e acompanhamento de vídeos. O usuário realiza o envio de arquivos, acompanha o status da operação e recebe notificações por e-mail ao fim do fluxo.
@@ -582,3 +596,141 @@ AWS Services
 ├── Amazon SES
 └── AWS ACM
 ```
+
+---
+
+
+### 🧭 RF/RNF - Requisitos Funcionais (RF) e Nao Funcionais (RNF) - APPVideo
+
+### RF
+
+```text
+RF01 Permitir cadastro de usuários.
+RF02 Permitir autenticação via JWT.
+RF03 Permitir upload de vídeos.
+RF04 Registrar metadados do vídeo.
+RF05 Processar vídeos de forma assíncrona.
+RF06 Fragmentar vídeos utilizando FFmpeg.
+RF07 Gerar arquivo ZIP contendo fragmentos.
+RF08 Disponibilizar download do vídeo e ZIP.
+RF09 Consultar status de processamento.
+RF10 Enviar notificações por e-mail.
+```
+
+### RNF
+
+```text
+RNF01 Utilizar HTTPS.
+RNF02 Executar em Kubernetes (EKS).
+RNF03 Utilizar SQS para desacoplamento.
+RNF04 Persistir dados em PostgreSQL RDS.
+RNF05 Armazenar arquivos em S3.
+RNF06 Escalabilidade horizontal dos serviços.
+RNF07 Observabilidade via logs e New Relic.
+RNF08 Disponibilidade através de ALB e EKS.
+```
+
+---
+
+### Diagrama ER (Banco de Dados)
+
+- users
+- videos
+- jobs
+- events
+- outputs
+
+
+```text
+users
+  |
+  +----< videos
+              |
+              +----< jobs
+              |
+              +----< events
+              |
+              +----< outputs
+```
+## MODELO ER - APPVideo
+
+users 1:N videos
+videos 1:N jobs
+videos 1:N events
+videos 1:N outputs
+Tabelas:
+users
+videos
+jobs
+events
+outputs
+
+
+---
+
+### Arquitetura AWS
+
+
+```text
+appvideo.willow.tec.br
+      |
+      v
+AWS ALB
+      |
+      v
+Amazon EKS
+  |
+  +--- Dashboard
+  +--- Auth Service
+  +--- Upload Service
+  +--- Status Service
+  +--- Video Worker
+  +--- Zip Service
+  +--- Notification Service
+
+Amazon S3
+Amazon SQS
+Amazon SES
+Amazon RDS PostgreSQL
+AWS ACM
+```
+
+![Arquitetura Cloud](docs/Arquitetura%20AWS%20-%20APPVideo.png)
+
+---
+
+### ADRs (Architecture Decision Records)
+
+## ADR-001
+
+- Título:
+Utilização do Amazon SQS para processamento assíncrono
+
+- Status:
+Aceito
+
+- Contexto:
+Processamento de vídeos é uma tarefa longa.
+
+- Decisão:
+Utilizar SQS para desacoplar upload e processamento.
+
+- Consequências:
+Maior escalabilidade e resiliência.
+
+## ADR-001 Utilização do Amazon SQS
+Decisão: desacoplar upload e processamento.
+
+## ADR-002 Utilização do Amazon EKS
+Decisão: orquestração de containers e escalabilidade.
+
+## ADR-003 Utilização do Amazon S3
+Decisão: armazenamento de vídeos, fragmentos e ZIPs.
+
+## DR-004 Utilização do Amazon SES
+Decisão: envio de notificações por e-mail.
+
+## ADR-005 Utilização do FFmpeg
+Decisão: fragmentação dos vídeos.
+
+
