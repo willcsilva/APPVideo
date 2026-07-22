@@ -20,30 +20,30 @@ O sistema segue um modelo **event-driven**, utilizando filas para desacoplamento
 
 # Requisitos Funcionais
 
-• A nova versão do sistema deve processar mais de um vídeo ao mesmo tempo.
-• Em caso de picos, o sistema não deve perder uma requisição.
-• O Sistema deve ser protegido por usuário e senha.
-• O fluxo deve ter uma listagem de status dos vídeos de um usuário.
+- A nova versão do sistema deve processar mais de um vídeo ao mesmo tempo.
+- Em caso de picos, o sistema não deve perder uma requisição.
+- O Sistema deve ser protegido por usuário e senha.
+- O fluxo deve ter uma listagem de status dos vídeos de um usuário.
 
 ------
 
 # Requisitos Técnicos
 
-Arquitetura e Infraestrutura
-• O sistema deve persistir os dados.
-• O sistema deve estar em uma arquitetura que o permita ser escalado.
-• O projeto deve ser versionado no Github.
-• O projeto deve ter testes que garantam a sua qualidade.
-• CI/CD da aplicação.
+- Arquitetura e Infraestrutura
+- O sistema deve persistir os dados.
+- O sistema deve estar em uma arquitetura que o permita ser escalado.
+- O projeto deve ser versionado no Github.
+- O projeto deve ter testes que garantam a sua qualidade.
+- CI/CD da aplicação.
 
 ------
 # STACK TECNOLÓGICA
 
-• Containers
-• Mensageria
-• Banco de Dados
-• Monitoramento
-• CI/CD
+- Containers
+- Mensageria
+- Banco de Dados
+- Monitoramento
+- CI/CD
 
 ------
 
@@ -105,8 +105,11 @@ Upload → Fila → Worker → Zip → Notificação → Status
 - Workers desacoplados via fila
 - Escala horizontal suportada
 
-Obs: "O projeto possui Horizontal Pod Autoscaler configurado e operacional. Entretanto, devido aos requisitos funcionais atuais — arquivos limitados a 50 MB e processamento extremamente rápido — a carga gerada não é suficiente para manter pressão de CPU, memória ou fila por tempo suficiente para disparar o scale-up durante a demonstração.
-Para demonstrar o scale-up seria necessário alterar artificialmente os requisitos operacionais, por exemplo aumentando significativamente o volume de uploads simultâneos, o tamanho dos vídeos, adicionando atraso proposital no processamento ou reduzindo temporariamente os thresholds do HPA. Como esses cenários não representam a carga real prevista para o sistema, optamos por manter a configuração de produção e demonstrar a capacidade através da configuração do Kubernetes."
+Obs: "O projeto possui Horizontal Pod Autoscaler configurado e operacional. Entretanto, devido aos requisitos funcionais atuais — arquivos limitados a 50 MB e processamento extremamente rápido, a carga gerada não é suficiente para manter pressão de CPU, memória ou fila por tempo suficiente para disparar o scale-up durante a demonstração.
+
+Para demonstrar o scale-up seria necessário alterar artificialmente os requisitos operacionais, por exemplo aumentando significativamente o volume de uploads simultâneos, o tamanho dos vídeos, adicionando atraso proposital no processamento ou reduzindo temporariamente os thresholds do HPA. 
+
+Como esses cenários não representam a carga real prevista para o sistema, optamos por manter a configuração de produção e demonstrar a capacidade através da configuração do Kubernetes."
 
 kubectl get hpa -n backend
 
@@ -196,6 +199,21 @@ A seguir, está o desenho da arquitetura do sistema, com os principais component
 ---
 
 Estes diagramas representam a visão completa da solução em Kubernetes, incluindo entrada do usuário, camada de autenticação e upload, fila de processamento assíncrono (SQS), workers de processamento de vídeo com FFmpeg, serviço de compactação, notificações e infraestrutura de persistência (PostgreSQL, Redis e S3).
+
+---
+
+### 📦 Pacote de Documentação Arquitetural APPVideo
+
+Inclui:
+- Documento C4
+- Requisitos Funcionais e Não Funcionais
+- ADRs principais
+- Arquitetura AWS
+- Modelo ER
+
+### 🔄 Fluxo E2E
+
+Usuário → Upload Service → S3 Raw → SQS → Video Worker → S3 Processed → SQS Zip → Zip Service → S3 Zip → Notification Service → SES.
 
 ---
 
@@ -582,3 +600,131 @@ AWS Services
 ├── Amazon SES
 └── AWS ACM
 ```
+
+---
+
+### 🧭 RF/RNF - Requisitos Funcionais e Não Funcionais
+
+### ✅ Requisitos Funcionais
+
+```text
+RF01 Permitir cadastro de usuários.
+RF02 Permitir autenticação via JWT.
+RF03 Permitir upload de vídeos.
+RF04 Registrar metadados do vídeo.
+RF05 Processar vídeos de forma assíncrona.
+RF06 Fragmentar vídeos utilizando FFmpeg.
+RF07 Gerar arquivo ZIP contendo fragmentos.
+RF08 Disponibilizar download do vídeo e ZIP.
+RF09 Consultar status de processamento.
+RF10 Enviar notificações por e-mail.
+```
+
+### ✅ Requisitos Não Funcionais
+
+```text
+RNF01 Utilizar HTTPS.
+RNF02 Executar em Kubernetes (EKS).
+RNF03 Utilizar SQS para desacoplamento.
+RNF04 Persistir dados em PostgreSQL RDS.
+RNF05 Armazenar arquivos em S3.
+RNF06 Escalabilidade horizontal dos serviços.
+RNF07 Observabilidade via logs e New Relic.
+RNF08 Disponibilidade através de ALB e EKS.
+```
+
+---
+
+### 🗄️ Diagrama ER (Modelo de Dados)
+
+```text
+users
+  └── videos
+        ├── jobs
+        ├── events
+        └── outputs
+```
+
+### 🧠 Modelo ER - APPVideo
+
+- users 1:N videos
+- videos 1:N jobs
+- videos 1:N events
+- videos 1:N outputs
+
+Tabelas principais:
+- users
+- videos
+- jobs
+- events
+- outputs
+
+---
+
+### ☁️ Arquitetura AWS
+
+```text
+appvideo.willow.tec.br
+      │
+      ▼
+AWS ALB
+      │
+      ▼
+Amazon EKS
+├── Dashboard
+├── Auth Service
+├── Upload Service
+├── Status Service
+├── Video Worker
+├── Zip Service
+└── Notification Service
+
+Amazon S3
+Amazon SQS
+Amazon SES
+Amazon RDS PostgreSQL
+AWS ACM
+```
+
+![Arquitetura Cloud](docs/Arquitetura%20AWS%20-%20APPVideo.png)
+
+---
+
+### 🧾 ADRs (Architecture Decision Records)
+
+#### ADR-001 — Utilização do Amazon SQS
+
+- Status: Aceito
+- Contexto: o processamento de vídeos é uma tarefa longa e deve ser desacoplada do upload.
+- Decisão: utilizar o Amazon SQS para separar os fluxos de ingestão e processamento.
+- Consequências: maior escalabilidade, resiliência e desacoplamento entre serviços.
+
+#### ADR-002 — Utilização do Amazon EKS
+
+- Status: Aceito
+- Contexto: a solução precisa de orquestração de containers com escalabilidade e alta disponibilidade.
+- Decisão: utilizar o Amazon EKS para hospedar os microsserviços.
+- Consequências: padronização de deploy e escalabilidade horizontal.
+
+#### ADR-003 — Utilização do Amazon S3
+
+- Status: Aceito
+- Contexto: é necessário armazenar vídeos brutos, fragmentos processados e arquivos compactados.
+- Decisão: utilizar o Amazon S3 como repositório principal de arquivos.
+- Consequências: armazenamento durável e escalável.
+
+#### ADR-004 — Utilização do Amazon SES
+
+- Status: Aceito
+- Contexto: é preciso enviar notificações por e-mail aos usuários.
+- Decisão: utilizar o Amazon SES para envio de mensagens transacionais.
+- Consequências: integração simples e confiável para notificações.
+
+#### ADR-005 — Utilização do FFmpeg
+
+- Status: Aceito
+- Contexto: os vídeos precisam ser fragmentados e processados para geração de artefatos intermediários.
+- Decisão: utilizar o FFmpeg para execução do processamento multimídia.
+- Consequências: suporte robusto a transformação e compactação de vídeos.
+
+
