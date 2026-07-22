@@ -20,30 +20,30 @@ O sistema segue um modelo **event-driven**, utilizando filas para desacoplamento
 
 # Requisitos Funcionais
 
-• A nova versão do sistema deve processar mais de um vídeo ao mesmo tempo.
-• Em caso de picos, o sistema não deve perder uma requisição.
-• O Sistema deve ser protegido por usuário e senha.
-• O fluxo deve ter uma listagem de status dos vídeos de um usuário.
+- A nova versão do sistema deve processar mais de um vídeo ao mesmo tempo.
+- Em caso de picos, o sistema não deve perder uma requisição.
+- O Sistema deve ser protegido por usuário e senha.
+- O fluxo deve ter uma listagem de status dos vídeos de um usuário.
 
 ------
 
 # Requisitos Técnicos
 
-Arquitetura e Infraestrutura
-• O sistema deve persistir os dados.
-• O sistema deve estar em uma arquitetura que o permita ser escalado.
-• O projeto deve ser versionado no Github.
-• O projeto deve ter testes que garantam a sua qualidade.
-• CI/CD da aplicação.
+- Arquitetura e Infraestrutura
+- O sistema deve persistir os dados.
+- O sistema deve estar em uma arquitetura que o permita ser escalado.
+- O projeto deve ser versionado no Github.
+- O projeto deve ter testes que garantam a sua qualidade.
+- CI/CD da aplicação.
 
 ------
 # STACK TECNOLÓGICA
 
-• Containers
-• Mensageria
-• Banco de Dados
-• Monitoramento
-• CI/CD
+- Containers
+- Mensageria
+- Banco de Dados
+- Monitoramento
+- CI/CD
 
 ------
 
@@ -105,8 +105,11 @@ Upload → Fila → Worker → Zip → Notificação → Status
 - Workers desacoplados via fila
 - Escala horizontal suportada
 
-Obs: "O projeto possui Horizontal Pod Autoscaler configurado e operacional. Entretanto, devido aos requisitos funcionais atuais — arquivos limitados a 50 MB e processamento extremamente rápido — a carga gerada não é suficiente para manter pressão de CPU, memória ou fila por tempo suficiente para disparar o scale-up durante a demonstração.
-Para demonstrar o scale-up seria necessário alterar artificialmente os requisitos operacionais, por exemplo aumentando significativamente o volume de uploads simultâneos, o tamanho dos vídeos, adicionando atraso proposital no processamento ou reduzindo temporariamente os thresholds do HPA. Como esses cenários não representam a carga real prevista para o sistema, optamos por manter a configuração de produção e demonstrar a capacidade através da configuração do Kubernetes."
+Obs: "O projeto possui Horizontal Pod Autoscaler configurado e operacional. Entretanto, devido aos requisitos funcionais atuais — arquivos limitados a 50 MB e processamento extremamente rápido, a carga gerada não é suficiente para manter pressão de CPU, memória ou fila por tempo suficiente para disparar o scale-up durante a demonstração.
+
+Para demonstrar o scale-up seria necessário alterar artificialmente os requisitos operacionais, por exemplo aumentando significativamente o volume de uploads simultâneos, o tamanho dos vídeos, adicionando atraso proposital no processamento ou reduzindo temporariamente os thresholds do HPA. 
+
+Como esses cenários não representam a carga real prevista para o sistema, optamos por manter a configuração de produção e demonstrar a capacidade através da configuração do Kubernetes."
 
 kubectl get hpa -n backend
 
