@@ -17,7 +17,7 @@ jobs:
 
       - name: SonarCloud Scan
         continue-on-error: true
-        uses: SonarSource/sonarqube-scan-action@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2 # v7
+        uses: SonarSource/sonarqube-scan-action@v7 # v7
         with:
           args: >
             -Dsonar.projectKey=willcsilva_APPVideo
@@ -49,7 +49,7 @@ jobs:
         uses: actions/checkout@v4 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@v4 # v4
         with:
           node-version: 24
 
@@ -125,7 +125,7 @@ jobs:
 
       - name: Detectar alterações nos microserviços
         id: filter
-        uses: dorny/paths-filter@6852f92c20ea7fd3b0c25de3b5112db3a98da050 # v3
+        uses: dorny/paths-filter@v3 # v3
         with:
           filters: |
             auth:
@@ -179,7 +179,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build e Push (${{ matrix.service }})
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v7
+        uses: docker/build-push-action@v6 # v7
         with:
           context: ${{ matrix.context }}
           push: true
