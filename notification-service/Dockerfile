@@ -5,9 +5,9 @@ RUN chown node:node /app
 
 USER node
 
+COPY --chown=node:node src/ src/
 COPY --chown=node:node package*.json ./
-RUN npm install --ignore-scripts
 
-COPY --chown=node:node . .
+RUN npm install --ignore-scripts
 
 CMD ["node", "src/worker.js"]
