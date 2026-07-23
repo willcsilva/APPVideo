@@ -263,33 +263,46 @@ async function loadStatus() {
     const data =
       await response.json();
 
-    document.getElementById(
-      "infra-status"
-    ).innerHTML = `
-      <div class="info-row">
-        <span class="info-label">
-          API:
-        </span>
+const infraStatus =
+  document.getElementById("infra-status");
 
-        <span class="online">
-          ${data.services.api}
-        </span>
-      </div>
+infraStatus.replaceChildren();
 
-      <div class="info-row">
-        <span class="info-label">
-          Database:
-        </span>
+function createInfoRow(label, value, cssClass) {
+  const row = document.createElement("div");
+  row.className = "info-row";
 
-        <span class="${
-          data.services.database === "ok"
-            ? "online"
-            : "error"
-        }">
-          ${data.services.database}
-        </span>
-      </div>
-    `;
+  const labelSpan = document.createElement("span");
+  labelSpan.className = "info-label";
+  labelSpan.textContent = label;
+
+  const valueSpan = document.createElement("span");
+  valueSpan.className = cssClass;
+  valueSpan.textContent = value;
+
+  row.appendChild(labelSpan);
+  row.appendChild(valueSpan);
+
+  return row;
+}
+
+infraStatus.appendChild(
+  createInfoRow(
+    "API:",
+    data.services.api,
+    "online"
+  )
+);
+
+infraStatus.appendChild(
+  createInfoRow(
+    "Database:",
+    data.services.database,
+    data.services.database === "ok"
+      ? "online"
+      : "error"
+  )
+);
 
   } catch (error) {
 

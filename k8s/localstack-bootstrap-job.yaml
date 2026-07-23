@@ -39,3 +39,4 @@ spec:
                 sqs create-queue --queue-name notification || true
 
               echo "Bootstrap concluído"
+              
