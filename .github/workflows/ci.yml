@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@v4 # v4
         with:
           fetch-depth: 0
 
@@ -46,7 +46,7 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@v4 # v4
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -117,7 +117,7 @@ jobs:
       dashboard: ${{ steps.filter.outputs.dashboard }}
     steps:
       - name: Checkout código
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@v4 # v4
 
       - name: Definir tag global da imagem
         id: vars
@@ -170,7 +170,7 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@v4 # v4
 
       - name: Login Docker Hub
         uses: docker/login-action@v3
@@ -195,7 +195,7 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@v4 # v4
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
