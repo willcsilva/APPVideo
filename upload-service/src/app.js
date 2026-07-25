@@ -19,9 +19,37 @@ if (process.env.NODE_ENV !== "test") {
   await import("newrelic");
 }
 
-
 const app = express();
-app.use(cors());
+const allowedOrigins =
+  process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS
+        .split(",")
+        .map(origin => origin.trim())
+    : [
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "https://appvideo.willow.tec.br"
+      ];
+
+app.use(
+  cors({
+    credentials: true,
+    origin(origin, callback) {
+
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error("Origin not allowed by CORS")
+      );
+    }
+  })
+);
 app.use(express.json());
 
 const upload = multer({
@@ -30,6 +58,14 @@ const upload = multer({
   }
 });
 
+app.use(express.json({
+  limit: "1mb"
+}));
+
+app.use(express.urlencoded({
+  extended: true,
+  limit: "1mb"
+}));
 
 app.post(
   "/videos",
