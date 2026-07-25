@@ -14,7 +14,12 @@ import { authMiddleware } from "./middleware/auth.js";
 import crypto from "crypto";
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true
+  })
+);
 app.use(express.json());
 
 /**

@@ -7,7 +7,12 @@ const { Client } = pkg;
 const app = express();
 const port = 3005;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true
+  })
+);
 app.use(express.json());
 
 const dbConfig = {
