@@ -13,7 +13,6 @@ import { authMiddleware } from "./middleware/auth.js";
 
 import crypto from "crypto";
 
-
 const app = express();
 const allowedOrigins =
   process.env.ALLOWED_ORIGINS

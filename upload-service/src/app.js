@@ -19,6 +19,7 @@ if (process.env.NODE_ENV !== "test") {
   await import("newrelic");
 }
 
+
 const app = express();
 const allowedOrigins =
   process.env.ALLOWED_ORIGINS

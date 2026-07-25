@@ -18,6 +18,7 @@ const allowedOrigins =
         "https://appvideo.willow.tec.br"
       ];
 
+      
 app.use(
   cors({
     credentials: true,
