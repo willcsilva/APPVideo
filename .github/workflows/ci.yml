@@ -179,7 +179,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build e Push (${{ matrix.service }})
-        uses: docker/build-push-action@b16d2601a6b948e2fb26f3772276581f31daa7cd # v7
+        uses: docker/build-push-action@b53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: ${{ matrix.context }}
           push: true
