@@ -7,10 +7,34 @@ const { Client } = pkg;
 const app = express();
 const port = 3005;
 
+const allowedOrigins =
+  process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS
+        .split(",")
+        .map(origin => origin.trim())
+    : [
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "https://appvideo.willow.tec.br"
+      ];
+
 app.use(
   cors({
-    origin: allowedOrigins,
-    credentials: true
+    credentials: true,
+    origin(origin, callback) {
+
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(
+        new Error("Origin not allowed by CORS")
+      );
+    }
   })
 );
 app.use(express.json());
