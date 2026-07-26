@@ -9,5 +9,12 @@
     "newrelic": "^14.3.0",
     "pg": "^8.13.1",
     "uuid": "^11.1.0"
-  }
+  },
+  "devDependencies": {
+  "jest": "^30.4.2"
+},
+"scripts": {
+  "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+  "test:coverage": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --coverage --passWithNoTests"
+}
 }

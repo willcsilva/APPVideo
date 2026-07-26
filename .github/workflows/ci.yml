@@ -7,11 +7,12 @@ on:
 
 jobs:
   sonar:
+    needs: build-and-test
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@v4 # v4
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -26,7 +27,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   build-and-test:
-    needs: sonar
     runs-on: ubuntu-latest
 
     services:
@@ -85,21 +85,42 @@ jobs:
           );
           SQL
 
-      - name: Run tests (auth-service)
+      - name: Generate coverage reports
         run: |
-          cd auth-service
-          npm test
+          for service in \
+            auth-service \
+            upload-service \
+            status-service \
+            notification-service \
+            zip-service \
+            video-processor-worker
+          do
 
-      # UPLOAD SERVICE
-      - name: Install deps (upload-service)
-        run: |
-          cd upload-service
-          npm install
+            if [ -f "$service/package.json" ]; then
 
-      - name: Run tests (upload-service)
+              echo "===== $service ====="
+
+              cd "$service"
+
+              npm install
+
+              if npm run | grep -q "test:coverage"; then
+                npm run test:coverage
+              else
+                echo "test:coverage não configurado em $service"
+              fi
+
+              cd ..
+            fi
+          done
+
+      - name: Verify coverage reports
         run: |
-          cd upload-service
-          npm test || echo "Sem testes estáveis no upload-service ainda"
+          echo "Coverage reports found:"
+          find . -name lcov.info
+
+          echo "Coverage file count:"
+          find . -name lcov.info | wc -l
 
   # Job otimizado: Detecta alterações via paths-filter e monta o JSON da Matriz
   prepare-env:
@@ -170,16 +191,16 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 # v6
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Login Docker Hub
-        uses: docker/login-action@a37ce9120846195fa4ece8f58b268e6043cb2f26
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build e Push (${{ matrix.service }})
-        uses: actions/checkout@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: ${{ matrix.context }}
           push: true
@@ -198,7 +219,7 @@ jobs:
         uses: actions/checkout@v4 # v4
 
       - name: Setup kubectl
-        uses: azure/setup-kubectl@v4
+        uses: azure/setup-kubectl@776406bce94f63e41d621b960d78ee25c8b76ede
 
       - name: Configurar kubeconfig
         run: |

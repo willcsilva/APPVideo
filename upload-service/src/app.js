@@ -320,9 +320,13 @@ app.get("/health", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("Upload service rodando na porta 3000");
-});
+if (process.env.NODE_ENV !== "test") {
+  app.listen(3000, () => {
+    console.log("Upload service rodando na porta 3000");
+  });
+}
+
+export default app;
 app.get("/videos", authMiddleware, async (req, res) => {
   const client = await pool.connect();
 

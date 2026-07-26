@@ -18,8 +18,9 @@
     "supertest": "^7.2.2"
   },
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node src/server.js",
-    "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
-  }
+  "start": "node src/server.js",
+  "dev": "node src/server.js",
+  "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+  "test:coverage": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --coverage"
+}
 }

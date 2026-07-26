@@ -12,7 +12,7 @@ const DASHBOARD_URL =
   process.env.DASHBOARD_URL ||
   "http://localhost";
 
-function calculateBackoffSeconds(receiveCount) {
+export function calculateBackoffSeconds(receiveCount) {
   const attempt = Number(receiveCount || 1);
 
   if (attempt <= 1) return 10;
@@ -23,7 +23,7 @@ function calculateBackoffSeconds(receiveCount) {
   return 300;
 }
 
-function buildNotification(eventType, payload) {
+export function buildNotification(eventType, payload) {
 
   switch (eventType) {
 
@@ -290,4 +290,6 @@ async function pollQueue() {
   }
 }
 
-setInterval(pollQueue, 5000);
+if (process.env.NODE_ENV !== "test") {
+  setInterval(pollQueue, 5000);
+}

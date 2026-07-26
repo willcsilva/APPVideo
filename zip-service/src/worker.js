@@ -20,7 +20,7 @@ import { pool } from "./infra/db.js";
 import { config } from "./config.js";
 
 
-async function streamToBuffer(stream) {
+export async function streamToBuffer(stream) {
   const chunks = [];
 
   for await (const chunk of stream) {
@@ -30,7 +30,7 @@ async function streamToBuffer(stream) {
   return Buffer.concat(chunks);
 }
 
-function extractProcessedKey(filePath) {
+export function extractProcessedKey(filePath) {
   const prefix = `${config.processedBucket}/`;
 
   if (filePath.startsWith(prefix)) {
@@ -413,4 +413,6 @@ async function bootstrap() {
   }
 }
 
-bootstrap();
+if (process.env.NODE_ENV !== "test") {
+  bootstrap();
+}
