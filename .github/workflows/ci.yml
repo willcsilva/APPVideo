@@ -85,28 +85,42 @@ jobs:
           );
           SQL
 
-      # AUTH SERVICE
-      - name: Run tests with coverage (auth-service)
+      - name: Generate coverage reports
         run: |
-          cd auth-service
-          npm run test:coverage
+          for service in \
+            auth-service \
+            upload-service \
+            status-service \
+            notification-service \
+            zip-service \
+            video-processor-worker
+          do
 
-      # Dependencies for UPLOAD SERVICE
-      - name: Install deps (upload-service)
-        run: |
-          cd upload-service
-          npm install
+            if [ -f "$service/package.json" ]; then
 
-      # UPLOAD SERVICE
-      - name: Run tests with coverage (upload-service)
-        run: |
-          cd upload-service
-          npm run test:coverage
+              echo "===== $service ====="
 
-      # Verify coverage *-SERVICE
+              cd "$service"
+
+              npm install
+
+              if npm run | grep -q "test:coverage"; then
+                npm run test:coverage
+              else
+                echo "test:coverage não configurado em $service"
+              fi
+
+              cd ..
+            fi
+          done
+
       - name: Verify coverage reports
         run: |
+          echo "Coverage reports found:"
           find . -name lcov.info
+
+          echo "Coverage file count:"
+          find . -name lcov.info | wc -l
 
   # Job otimizado: Detecta alterações via paths-filter e monta o JSON da Matriz
   prepare-env:
