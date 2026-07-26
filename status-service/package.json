@@ -12,6 +12,10 @@
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1"
   },
+  "devDependencies": {
+  "jest": "^30.4.2",
+  "supertest": "^7.2.2"
+},
   "scripts": {
   "start": "node src/app.js",
   "dev": "node src/app.js",
