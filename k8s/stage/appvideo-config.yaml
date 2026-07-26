@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: appvideo-config
+  namespace: backend
+
+data:
+  DB_HOST: postgres.infra.svc.cluster.local
+  DB_PORT: "5432"
+  DB_NAME: video_processor
+
+  AWS_REGION: us-east-1
+  AWS_ENDPOINT: http://localstack.infra.svc.cluster.local:4566
+
+  S3_RAW_BUCKET: raw-videos
+  S3_PROCESSED_BUCKET: processed-images
+  S3_ZIP_BUCKET: zip-files

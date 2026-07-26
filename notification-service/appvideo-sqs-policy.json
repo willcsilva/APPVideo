@@ -1,0 +1,21 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage",
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl",
+        "sqs:ChangeMessageVisibility"
+      ],
+      "Resource": [
+        "arn:aws:sqs:us-east-2:588738575384:video-processing",
+        "arn:aws:sqs:us-east-2:588738575384:zip-generation",
+        "arn:aws:sqs:us-east-2:588738575384:notification"
+      ]
+    }
+  ]
+}

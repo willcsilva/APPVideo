@@ -2,7 +2,14 @@ export const config = {
   awsRegion: process.env.AWS_REGION || "us-east-1",
   awsEndpoint: process.env.AWS_ENDPOINT,
 
-  rawBucket: process.env.S3_RAW_BUCKET || "raw-videos",
+  rawBucket:
+    process.env.S3_RAW_BUCKET || "raw-videos",
+
+  processedBucket:
+    process.env.S3_PROCESSED_BUCKET || "processed-images",
+
+  zipBucket:
+    process.env.S3_ZIP_BUCKET || "zip-files",
 
   queueName:
     process.env.SQS_VIDEO_QUEUE ||

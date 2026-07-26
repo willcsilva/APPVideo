@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: app-config
+  namespace: backend
+
+DASHBOARD_URL: "http://k8s-backend-appvideo-12a3ea285f-924923461.us-east-2.elb.amazonaws.com"
+
+data:
+  DB_HOST: appvideo.cr6sq6s66ar0.us-east-2.rds.amazonaws.com
+  DB_NAME: dbappvideo
+  DB_PORT: "5432"
+
+  AWS_REGION: us-east-2
+
+  S3_RAW_BUCKET: appvideo-prod-raw
+  S3_PROCESSED_BUCKET: appvideo-prod-processed
+  S3_ZIP_BUCKET: appvideo-prod-zip
+
+  SQS_VIDEO_QUEUE_URL: https://sqs.us-east-2.amazonaws.com/588738575384/video-processing
+  SQS_ZIP_QUEUE_URL: https://sqs.us-east-2.amazonaws.com/588738575384/zip-generation
+  SQS_NOTIFICATION_QUEUE_URL: https://sqs.us-east-2.amazonaws.com/588738575384/notification

@@ -9,4 +9,11 @@ export const pool = new Pool({
   database: config.dbName,
   user: config.dbUser,
   password: config.dbPassword,
+
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? {
+          rejectUnauthorized: false,
+        }
+      : false,
 });

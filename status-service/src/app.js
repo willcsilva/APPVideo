@@ -57,8 +57,9 @@ async function checkDatabase() {
 
     return "ok";
   } catch (error) {
-    return "error";
-  }
+  console.error("DB CHECK ERROR:", error);
+  return "error";
+}
 }
 
 app.get("/status", async (req, res) => {
