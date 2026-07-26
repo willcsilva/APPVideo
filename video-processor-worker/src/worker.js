@@ -36,7 +36,7 @@ async function streamToBuffer(stream) {
   return Buffer.concat(chunks);
 }
 
-function extractKeyFromS3Path(s3Path) {
+export function extractKeyFromS3Path(s3Path) {
   const prefix = `${config.rawBucket}/`;
 
   if (s3Path.startsWith(prefix)) {
@@ -626,4 +626,6 @@ async function bootstrap() {
   }
 }
 
-bootstrap();
+if (process.env.NODE_ENV !== "test") {
+  bootstrap();
+}
