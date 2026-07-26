@@ -12,10 +12,10 @@
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1"
   },
-    "scripts": {
-    "start": "node src/app.js",
-    "dev": "node src/server.js",
-    "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
-    "test:coverage": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --coverage --passWithNoTests"
+  "scripts": {
+  "start": "node src/app.js",
+  "dev": "node src/app.js",
+  "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+  "test:coverage": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --coverage --passWithNoTests"
   }
 }

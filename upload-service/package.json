@@ -21,8 +21,7 @@
   },
   "scripts": {
     "start": "node src/app.js",
-    "dev": "node src/server.js",
-    "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --coverage --passWithNoTests",
-    "test:coverage": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --coverage"
+    "dev": "node src/app.js",
+    "test:coverage": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --coverage --passWithNoTests"
   }
 }

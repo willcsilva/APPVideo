@@ -9,5 +9,11 @@
   "devDependencies": {
     "jest": "^30.4.2",
     "supertest": "^7.2.2"
+  },
+  "scripts": {
+  "start": "node src/worker.js",
+  "dev": "node src/worker.js",
+  "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+  "test:coverage": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --coverage --passWithNoTests"
   }
 }
