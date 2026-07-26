@@ -85,10 +85,17 @@ jobs:
           );
           SQL
 
+      # AUTH SERVICE
       - name: Run tests with coverage (auth-service)
         run: |
           cd auth-service
           npm run test:coverage
+
+      # Verify coverage AUTH-SERVICE
+      - name: Verify coverage
+        run: |
+          ls -lah auth-service/coverage
+          head -20 auth-service/coverage/lcov.info
 
       # UPLOAD SERVICE
       - name: Install deps (upload-service)
