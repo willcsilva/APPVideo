@@ -91,22 +91,22 @@ jobs:
           cd auth-service
           npm run test:coverage
 
-      # Verify coverage AUTH-SERVICE
-      - name: Verify coverage
-        run: |
-          ls -lah auth-service/coverage
-          head -20 auth-service/coverage/lcov.info
-
-      # UPLOAD SERVICE
+      # Dependencies for UPLOAD SERVICE
       - name: Install deps (upload-service)
         run: |
           cd upload-service
           npm install
 
-      - name: Run tests (upload-service)
+      # UPLOAD SERVICE
+      - name: Run tests with coverage (upload-service)
         run: |
           cd upload-service
-          npm test || echo "Sem testes estáveis no upload-service ainda"
+          npm run test:coverage
+
+      # Verify coverage *-SERVICE
+      - name: Verify coverage reports
+        run: |
+          find . -name lcov.info
 
   # Job otimizado: Detecta alterações via paths-filter e monta o JSON da Matriz
   prepare-env:
