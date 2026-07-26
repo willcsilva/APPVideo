@@ -6,25 +6,25 @@ on:
   pull_request:
 
 jobs:
-sonar:
-  needs: build-and-test
-  runs-on: ubuntu-latest
+  sonar:
+    needs: build-and-test
+    runs-on: ubuntu-latest
 
-  steps:
-    - name: Checkout código
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: SonarCloud Scan
-      continue-on-error: true
-      uses: SonarSource/sonarqube-scan-action@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2 # v7
-      with:
-        args: >
-          -Dsonar.projectKey=willcsilva_APPVideo
-          -Dsonar.organization=willcsilva
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: SonarCloud Scan
+        continue-on-error: true
+        uses: SonarSource/sonarqube-scan-action@c7ee0f9df90b7aa20e8dcf9695dcfe2e7da5b4f2 # v7
+        with:
+          args: >
+            -Dsonar.projectKey=willcsilva_APPVideo
+            -Dsonar.organization=willcsilva
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   build-and-test:
     runs-on: ubuntu-latest
