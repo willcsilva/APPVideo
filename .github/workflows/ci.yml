@@ -85,10 +85,10 @@ jobs:
           );
           SQL
 
-      - name: Run tests (auth-service)
+      - name: Run tests with coverage (auth-service)
         run: |
           cd auth-service
-          npm test
+          npm run test:coverage
 
       # UPLOAD SERVICE
       - name: Install deps (upload-service)
