@@ -15,5 +15,8 @@
   "dev": "node src/worker.js",
   "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
   "test:coverage": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --runInBand --coverage --passWithNoTests"
-  }
+  },
+  "devDependencies": {
+  "jest": "^30.4.2"
+}
 }

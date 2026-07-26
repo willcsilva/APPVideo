@@ -73,8 +73,12 @@ app.get("/status", async (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(
-    `Status Service rodando na porta ${port}`
-  );
-});
+if (process.env.NODE_ENV !== "test") {
+  app.listen(port, () => {
+    console.log(
+      `Status Service rodando na porta ${port}`
+    );
+  });
+}
+
+export default app;

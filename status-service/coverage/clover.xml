@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1785070880703" clover="3.2.0">
+  <project timestamp="1785070880703" name="All files">
+    <metrics statements="26" coveredstatements="17" conditionals="20" coveredconditionals="14" methods="5" coveredmethods="3" elements="51" coveredelements="34" complexity="0" loc="26" ncloc="26" packages="1" files="1" classes="1"/>
+    <file name="app.js" path="/Users/will/Documents/Projetos/APPVideo/status-service/src/app.js">
+      <metrics statements="26" coveredstatements="17" conditionals="20" coveredconditionals="14" methods="5" coveredmethods="3"/>
+      <line num="5" count="1" type="stmt"/>
+      <line num="7" count="1" type="stmt"/>
+      <line num="8" count="1" type="stmt"/>
+      <line num="11" count="1" type="cond" truecount="1" falsecount="1"/>
+      <line num="14" count="0" type="stmt"/>
+      <line num="21" count="1" type="stmt"/>
+      <line num="26" count="1" type="cond" truecount="1" falsecount="1"/>
+      <line num="27" count="1" type="stmt"/>
+      <line num="30" count="0" type="cond" truecount="0" falsecount="2"/>
+      <line num="31" count="0" type="stmt"/>
+      <line num="34" count="0" type="stmt"/>
+      <line num="40" count="1" type="stmt"/>
+      <line num="42" count="1" type="stmt"/>
+      <line num="51" count="1" type="stmt"/>
+      <line num="53" count="1" type="stmt"/>
+      <line num="54" count="1" type="stmt"/>
+      <line num="55" count="0" type="stmt"/>
+      <line num="56" count="0" type="stmt"/>
+      <line num="58" count="0" type="stmt"/>
+      <line num="60" count="1" type="stmt"/>
+      <line num="64" count="1" type="stmt"/>
+      <line num="65" count="1" type="stmt"/>
+      <line num="67" count="1" type="stmt"/>
+      <line num="76" count="1" type="cond" truecount="1" falsecount="1"/>
+      <line num="77" count="0" type="stmt"/>
+      <line num="78" count="0" type="stmt"/>
+    </file>
+  </project>
+</coverage>
