@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@c0c8b32d33a5244f1e5947304550403b63930415 # v4
+        uses: actions/checkout@v4 # v4
         with:
           fetch-depth: 0
 
@@ -46,7 +46,7 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@c0c8b32d33a5244f1e5947304550403b63930415 # v4
+        uses: actions/checkout@v4 # v4
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -117,7 +117,7 @@ jobs:
       dashboard: ${{ steps.filter.outputs.dashboard }}
     steps:
       - name: Checkout código
-        uses: actions/checkout@c0c8b32d33a5244f1e5947304550403b63930415 # v4
+        uses: actions/checkout@v4 # v4
 
       - name: Definir tag global da imagem
         id: vars
@@ -195,10 +195,10 @@ jobs:
 
     steps:
       - name: Checkout código
-        uses: actions/checkout@c0c8b32d33a5244f1e5947304550403b63930415 # v4
+        uses: actions/checkout@v4 # v4
 
       - name: Setup kubectl
-        uses: azure/setup-kubectl@v4
+        uses: azure/setup-kubectl@776406bce94f63e41d621b960d78ee25c8b76ede
 
       - name: Configurar kubeconfig
         run: |
